@@ -107,7 +107,7 @@ type safeTransport struct {
 func (t *safeTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	resp, err := t.base.RoundTrip(req)
 	if err != nil {
-		return nil, err //nolint:wrapcheck // http.Client inspects the transport error; keep it intact
+		return nil, err
 	}
 
 	// Reject early when the server advertises an over-limit Content-Length.
@@ -122,11 +122,52 @@ func (t *safeTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	return resp, nil
 }
 
+// userAgentTransport sets a User-Agent on the requests that don't carry one,
+// since WAFs often block Go's default "Go-http-client/<version>".
+type userAgentTransport struct {
+	base      http.RoundTripper
+	userAgent string
+}
+
+func (t *userAgentTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	if _, set := req.Header["User-Agent"]; !set && req.Header != nil {
+		// A RoundTripper must not modify the request it is given, hence the clone.
+		req = req.Clone(req.Context())
+		req.Header.Set("User-Agent", t.userAgent)
+	}
+
+	return t.base.RoundTrip(req)
+}
+
+// Option configures the client built by [SafeHTTPClient].
+type Option func(*options)
+
+type options struct {
+	userAgent string
+}
+
+// WithUserAgent sets the User-Agent sent on every request that doesn't already
+// carry one, in place of [UserAgent]. An empty value keeps that default.
+func WithUserAgent(userAgent string) Option {
+	return func(o *options) {
+		o.userAgent = userAgent
+	}
+}
+
 // SafeHTTPClient builds an *http.Client hardened against SSRF and unbounded
 // downloads. When allowPrivate is true the SSRF address filtering is disabled
 // (used for trusted input and tests that target loopback servers); the response
 // size limit is always enforced.
-func SafeHTTPClient(timeout time.Duration, allowPrivate bool) *http.Client {
+func SafeHTTPClient(timeout time.Duration, allowPrivate bool, opts ...Option) *http.Client {
+	o := options{userAgent: UserAgent()}
+	for _, opt := range opts {
+		opt(&o)
+	}
+
+	if o.userAgent == "" {
+		o.userAgent = UserAgent()
+	}
+
 	dialer := &net.Dialer{
 		Timeout:   30 * time.Second,
 		KeepAlive: 30 * time.Second,
@@ -146,7 +187,10 @@ func SafeHTTPClient(timeout time.Duration, allowPrivate bool) *http.Client {
 	}
 
 	return &http.Client{
-		Timeout:   timeout,
-		Transport: &safeTransport{base: transport, max: MaxResponseBytes},
+		Timeout: timeout,
+		Transport: &userAgentTransport{
+			base:      &safeTransport{base: transport, max: MaxResponseBytes},
+			userAgent: o.userAgent,
+		},
 	}
 }

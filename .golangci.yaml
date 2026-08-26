@@ -67,6 +67,9 @@ linters:
         # No point in wrapping these
         - func encoding/json.Marshal(v any)
         - func encoding/json.UnmarshalJSON(v any)
+        # A RoundTripper must return the transport error as is: http.Client
+        # and its callers type assert on it instead of unwrapping it
+        - func (net/http.RoundTripper).RoundTrip(
 
         # Defaults
         - .Errorf(

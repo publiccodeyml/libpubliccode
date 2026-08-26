@@ -76,6 +76,15 @@ type ParserConfig struct {
 	// Defaults to 30s if zero.
 	Timeout time.Duration
 
+	// UserAgent is sent in the User-Agent header of every request made during
+	// the external checks. It defaults to [UserAgent], which names this library
+	// and its version.
+	//
+	// Programs embedding the parser are encouraged to identify themselves here,
+	// so that the administrators of the sites being checked can tell their
+	// traffic apart and allow it.
+	UserAgent string
+
 	// AllowNetworkToPrivateHosts allows the external checks to connect to
 	// non-public addresses (loopback, private, link-local, ...).
 	//
@@ -120,9 +129,15 @@ func NewParser(config ParserConfig) (*Parser, error) {
 	}
 
 	// Hardened HTTP client: refuses connections to non-public addresses (SSRF)
-	// and caps the size of each response (resource exhaustion). See
-	// internal/safehttp.go.
-	httpClient := urlutil.SafeHTTPClient(timeout, config.AllowNetworkToPrivateHosts)
+	// and caps the size of each response (resource exhaustion). It also sets the
+	// User-Agent, which covers both the requests built here and the ones built
+	// by the internal httpclient and by go-vcsurl, since they all go through
+	// this client. See internal/safehttp.go.
+	httpClient := urlutil.SafeHTTPClient(
+		timeout,
+		config.AllowNetworkToPrivateHosts,
+		urlutil.WithUserAgent(config.UserAgent),
+	)
 	vcsurl.Client = httpClient
 	p := Parser{
 		disableNetwork:        config.DisableNetwork,

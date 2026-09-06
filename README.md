@@ -46,7 +46,7 @@ To get the latest version use:
 go install github.com/publiccodeyml/libpubliccode/v5/publiccode-parser@latest
 ```
 
-Or get a precompiled package from the [release page](https://github.com/italia/publiccode-parser-go/releases/latest)
+Or get a precompiled package from the [release page](https://github.com/publiccodeyml/libpubliccode/releases/latest)
 
 Example:
 
@@ -79,7 +79,7 @@ guidelines.
 
 - [publiccode-parser-php](https://github.com/bfabio/publiccode-parser-php) - PHP
   bindings for this library
-- [publiccode-crawler](https://github.com/italia/publiccode-crawler) - a Go
+- [publiccode-crawler](https://github.com/publiccodeyml/publiccode-crawler) - a Go
   crawler that uses this library
 
 ## Maintainers

@@ -9,7 +9,7 @@ import (
 	"os"
 	"runtime/debug"
 
-	publiccode "github.com/italia/publiccode-parser-go/v5"
+	publiccode "github.com/publiccodeyml/libpubliccode/v5"
 )
 
 var (

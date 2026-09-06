@@ -7,7 +7,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/italia/publiccode-parser-go/v5/internal/httpclient"
+	"github.com/publiccodeyml/libpubliccode/v5/internal/httpclient"
 )
 
 func newTestClient(httpClient *http.Client) *httpclient.Client {

@@ -7,7 +7,7 @@ import (
 	"path"
 	"path/filepath"
 
-	"github.com/italia/publiccode-parser-go/v5/internal/httpclient"
+	"github.com/publiccodeyml/libpubliccode/v5/internal/httpclient"
 )
 
 // downloadFile download the file in the path.

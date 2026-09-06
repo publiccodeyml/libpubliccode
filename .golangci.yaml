@@ -59,7 +59,7 @@ linters:
         - empty
         - stdlib
         # PublicCode is the primary return type of the public API
-        - github.com/italia/publiccode-parser-go/v5.PublicCode
+        - github.com/publiccodeyml/libpubliccode/v5.PublicCode
     lll:
       line-length: 120
     wrapcheck:

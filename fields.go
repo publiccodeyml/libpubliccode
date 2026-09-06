@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/alranel/go-vcsurl/v2"
-	urlutil "github.com/italia/publiccode-parser-go/v5/internal"
+	urlutil "github.com/publiccodeyml/libpubliccode/v5/internal"
 )
 
 type validateFn func(publiccode PublicCode, parser *Parser, network bool, baseURL *url.URL) error

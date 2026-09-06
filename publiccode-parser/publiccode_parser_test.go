@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	publiccode "github.com/italia/publiccode-parser-go/v5"
+	publiccode "github.com/publiccodeyml/libpubliccode/v5"
 )
 
 const (

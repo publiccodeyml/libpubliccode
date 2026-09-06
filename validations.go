@@ -18,8 +18,8 @@ import (
 	"strings"
 
 	"github.com/alranel/go-vcsurl/v2"
-	"github.com/italia/publiccode-parser-go/v5/data"
-	netutil "github.com/italia/publiccode-parser-go/v5/internal"
+	"github.com/publiccodeyml/libpubliccode/v5/data"
+	netutil "github.com/publiccodeyml/libpubliccode/v5/internal"
 )
 
 func init() {

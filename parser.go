@@ -25,9 +25,9 @@ import (
 	yaml "github.com/goccy/go-yaml"
 	"github.com/goccy/go-yaml/ast"
 	"github.com/goccy/go-yaml/parser"
-	urlutil "github.com/italia/publiccode-parser-go/v5/internal"
-	"github.com/italia/publiccode-parser-go/v5/internal/httpclient"
-	publiccodeValidator "github.com/italia/publiccode-parser-go/v5/validators"
+	urlutil "github.com/publiccodeyml/libpubliccode/v5/internal"
+	"github.com/publiccodeyml/libpubliccode/v5/internal/httpclient"
+	publiccodeValidator "github.com/publiccodeyml/libpubliccode/v5/validators"
 )
 
 // Build Validator and Translator once at package init.

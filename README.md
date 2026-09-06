@@ -33,7 +33,7 @@ publiccode, err := parser.Parse("/path/to/local/dir/publiccode.yml")
 // parse.Parse("https://github.com/example/example/publiccode.yml")
 ```
 
-[![Go Reference](https://pkg.go.dev/badge/github.com/italia/publiccode-parser-go/v5.svg)](https://pkg.go.dev/github.com/italia/publiccode-parser-go/v5)
+[![Go Reference](https://pkg.go.dev/badge/github.com/publiccodeyml/libpubliccode/v5.svg)](https://pkg.go.dev/github.com/publiccodeyml/libpubliccode/v5)
 
 ## From command line
 
@@ -43,7 +43,7 @@ from the command line.
 To get the latest version use:
 
 ```shell
-go install github.com/italia/publiccode-parser-go/v5/publiccode-parser@latest
+go install github.com/publiccodeyml/libpubliccode/v5/publiccode-parser@latest
 ```
 
 Or get a precompiled package from the [release page](https://github.com/italia/publiccode-parser-go/releases/latest)

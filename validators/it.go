@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/italia/publiccode-parser-go/v5/data"
+	"github.com/publiccodeyml/libpubliccode/v5/data"
 )
 
 // ipaCodes is a set of valid IPA codes, lowercased for case-insensitive lookup.

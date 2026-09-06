@@ -7,11 +7,11 @@ import (
 	"os"
 	"testing"
 
-	httpclient "github.com/italia/httpclient-lib-go"
+	"github.com/italia/publiccode-parser-go/v5/internal/httpclient"
 )
 
 func newTestClient(httpClient *http.Client) *httpclient.Client {
-	return httpclient.NewClient(httpClient)
+	return httpclient.New(httpClient)
 }
 
 func TestDownloadTmpFileSuccess(t *testing.T) {
@@ -57,8 +57,9 @@ func TestDownloadTmpFileHTTPError(t *testing.T) {
 
 	u, _ := url.Parse(srv.URL + "/testfile.txt")
 	_, err := DownloadTmpFile(client, u, nil)
-	// httpclient-lib-go may or may not return error for 5xx; we just ensure no panic.
-	_ = err
+	if err == nil {
+		t.Error("expected error for a 5xx response")
+	}
 }
 
 func TestDownloadTmpFileConnectionRefused(t *testing.T) {

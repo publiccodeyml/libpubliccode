@@ -91,7 +91,7 @@ func (p *Parser) isReachable(u url.URL) (bool, error) {
 		return false, errMissingURLScheme
 	}
 
-	_, err := p.httpclient.GetURL(u.String(), getHeaderFromDomain(p.domain, u.String()))
+	_, err := p.httpclient.Get(u.String(), getHeaderFromDomain(p.domain, u.String()))
 	if err != nil {
 		return false, fmt.Errorf("HTTP GET failed for %s: %w", u.String(), err)
 	}

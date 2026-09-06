@@ -2,9 +2,6 @@
 <!-- MD033/no-inline-html -->
 # publiccode.yml parser for Go
 
-[![Join the #publiccode channel](https://img.shields.io/badge/Slack%20channel-%23publiccode-blue.svg?logo=slack)](https://developersitalia.slack.com/messages/CAM3F785T)
-[![Get invited](https://slack.developers.italia.it/badge.svg)](https://slack.developers.italia.it/)
-
 A Go parser and validator for [publiccode.yml](https://github.com/publiccodeyml/publiccode.yml)
 files.
 
@@ -90,9 +87,6 @@ guidelines.
 This software is maintained by community contributors.
 
 ## License
-
-© 2018-present Team per la Trasformazione Digitale - Presidenza del Consiglio
-dei Ministri
 
 Licensed under the EUPL 1.2.
 The version control system provides attribution for specific lines of code.

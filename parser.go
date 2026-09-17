@@ -25,8 +25,8 @@ import (
 	yaml "github.com/goccy/go-yaml"
 	"github.com/goccy/go-yaml/ast"
 	"github.com/goccy/go-yaml/parser"
-	httpclient "github.com/italia/httpclient-lib-go"
 	urlutil "github.com/italia/publiccode-parser-go/v5/internal"
+	"github.com/italia/publiccode-parser-go/v5/internal/httpclient"
 	publiccodeValidator "github.com/italia/publiccode-parser-go/v5/validators"
 )
 
@@ -130,7 +130,7 @@ func NewParser(config ParserConfig) (*Parser, error) {
 		domain:                config.Domain,
 		branch:                config.Branch,
 		client:                httpClient,
-		httpclient:            httpclient.NewClient(httpClient),
+		httpclient:            httpclient.New(httpClient),
 	}
 
 	if config.BaseURL != "" {

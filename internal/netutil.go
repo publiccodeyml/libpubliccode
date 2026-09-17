@@ -1,15 +1,13 @@
 package netutil
 
 import (
-	"bytes"
 	"fmt"
-	"io"
 	"net/url"
 	"os"
 	"path"
 	"path/filepath"
 
-	httpclient "github.com/italia/httpclient-lib-go"
+	"github.com/italia/publiccode-parser-go/v5/internal/httpclient"
 )
 
 // downloadFile download the file in the path.
@@ -25,15 +23,13 @@ func downloadFile(client *httpclient.Client, filepath string, url *url.URL, head
 	}()
 
 	// Get the data from the url.
-	resp, err := client.GetURL(url.String(), headers)
+	body, err := client.Get(url.String(), headers)
 	if err != nil {
 		return fmt.Errorf("downloading %s: %w", url, err)
 	}
 
-	reader := bytes.NewReader(resp.Body)
-
 	// Write the body to file.
-	if _, err = io.Copy(out, reader); err != nil {
+	if _, err = out.Write(body); err != nil {
 		return fmt.Errorf("writing file: %w", err)
 	}
 

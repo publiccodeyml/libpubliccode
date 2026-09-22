@@ -11,7 +11,7 @@ builds:
 -
   id: publiccode-parser
   binary: publiccode-parser
-  main: ./publiccode-parser/publiccode_parser.go
+  main: ./publiccode-parser
   flags:
     - -trimpath
   ldflags:

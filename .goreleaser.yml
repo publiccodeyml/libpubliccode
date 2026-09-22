@@ -15,7 +15,7 @@ builds:
   flags:
     - -trimpath
   ldflags:
-    - -s -w -buildid= -X main.version={{.Version}} -X main.date={{.CommitDate}}
+    - -s -w -buildid=
   env:
     - CGO_ENABLED=0
     - SOURCE_DATE_EPOCH={{.CommitTimestamp}}

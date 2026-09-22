@@ -12,22 +12,29 @@ import (
 	publiccode "github.com/publiccodeyml/libpubliccode/v5"
 )
 
-var (
-	version string
-	date    string
-)
+var version, date = buildVersion()
 
-func init() {
-	if version == "" {
-		version = "devel"
-		if info, ok := debug.ReadBuildInfo(); ok {
-			version = info.Main.Version
+// buildVersion returns the module version and the commit date recorded in the
+// build information of the running binary.
+func buildVersion() (string, string) {
+	version, date := "devel", "(latest)"
+
+	info, ok := debug.ReadBuildInfo()
+	if !ok {
+		return version, date
+	}
+
+	if info.Main.Version != "" {
+		version = info.Main.Version
+	}
+
+	for _, setting := range info.Settings {
+		if setting.Key == "vcs.time" {
+			date = setting.Value
 		}
 	}
 
-	if date == "" {
-		date = "(latest)"
-	}
+	return version, date
 }
 
 func main() {

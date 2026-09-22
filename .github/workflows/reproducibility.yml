@@ -37,7 +37,7 @@ jobs:
           CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GOAMD64=v1 \
             go build -trimpath \
               -ldflags="-s -w -buildid= -X main.version=$VERSION -X main.date=$DATE" \
-              -o /tmp/plain-build ./publiccode-parser/publiccode_parser.go
+              -o /tmp/plain-build ./publiccode-parser
           sha256sum /tmp/goreleaser-build /tmp/plain-build
           cmp /tmp/goreleaser-build /tmp/plain-build \
             && echo "Reproducible build confirmed"

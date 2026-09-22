@@ -1,4 +1,5 @@
 publiccode-parser/publiccode-parser
+dist/
 .vscode
 .history
 .DS_Store

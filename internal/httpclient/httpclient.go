@@ -20,15 +20,23 @@ type Doer interface {
 // Client sends GET requests and retries the ones the server rate limits.
 type Client struct {
 	doer  Doer
-	sleep func(time.Duration)
+	sleep func(context.Context, time.Duration) error
 	now   func() time.Time
 }
+
+const (
+	headerRetryAfter    = "Retry-After"
+	headerRateReset     = "X-Ratelimit-Reset"
+	headerRateRemaining = "X-Ratelimit-Remaining"
+)
 
 var (
 	ErrNotFound         = errors.New("not found")
 	ErrForbidden        = errors.New("forbidden")
 	ErrRateLimited      = errors.New("rate limited")
 	ErrUnexpectedStatus = errors.New("unexpected status")
+
+	errInvalidHeader = errors.New("invalid header")
 )
 
 // maxAttempts caps the retries when the server says how long to wait, so
@@ -40,6 +48,10 @@ const maxAttempts = 8
 // rate limit, and double each time: seven minutes in total.
 const maxBlindAttempts = 4
 
+// maxRetryWait caps a wait the server asks for, so a Retry-After of a day
+// or a far away X-Ratelimit-Reset does not stall a validation.
+const maxRetryWait = 30 * time.Second
+
 // New returns a Client that sends its requests through doer. When doer is
 // nil it uses a default client with a one minute timeout.
 func New(doer Doer) *Client {
@@ -47,16 +59,23 @@ func New(doer Doer) *Client {
 		doer = &http.Client{Timeout: 60 * time.Second}
 	}
 
-	return &Client{doer: doer, sleep: time.Sleep, now: time.Now}
+	return &Client{doer: doer, sleep: sleepWithContext, now: time.Now}
 }
 
 // Get returns the body at url. On a 429, or on a 403 that is a rate limit,
 // it waits and tries again: for as long as Retry-After says, until the
 // time in X-Ratelimit-Reset, or with an exponential backoff from one
-// minute when the server gave no time.
+// minute when the server gave no time. A wait the server asks for is
+// capped at 30 seconds.
 func (c *Client) Get(url string, headers map[string]string) ([]byte, error) {
+	return c.GetWithContext(context.Background(), url, headers)
+}
+
+// GetWithContext is Get with a context. The request and the waits between
+// retries stop when ctx is cancelled or reaches its deadline.
+func (c *Client) GetWithContext(ctx context.Context, url string, headers map[string]string) ([]byte, error) {
 	for attempt := 1; ; attempt++ {
-		resp, err := c.do(url, headers)
+		resp, err := c.do(ctx, url, headers)
 		if err != nil {
 			return nil, err
 		}
@@ -78,12 +97,14 @@ func (c *Client) Get(url string, headers map[string]string) ([]byte, error) {
 			return nil, fmt.Errorf("%w after %d attempts: %s", ErrRateLimited, attempt, resp.Status)
 		}
 
-		c.sleep(wait)
+		if err := c.sleep(ctx, wait); err != nil {
+			return nil, err
+		}
 	}
 }
 
-func (c *Client) do(url string, headers map[string]string) (*http.Response, error) {
-	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, url, nil)
+func (c *Client) do(ctx context.Context, url string, headers map[string]string) (*http.Response, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("building the request: %w", err)
 	}
@@ -106,13 +127,13 @@ func (c *Client) do(url string, headers map[string]string) (*http.Response, erro
 // X-Ratelimit-Reset with no quota left, as GitHub answers when the API
 // quota is used up. Any other 403 is a denial.
 func (c *Client) retryAfter(resp *http.Response) (time.Duration, bool, bool) {
-	retryAfter := resp.Header.Get("Retry-After")
-	reset := resp.Header.Get("X-Ratelimit-Reset")
+	retryAfter := resp.Header.Get(headerRetryAfter)
+	reset := resp.Header.Get(headerRateReset)
 
 	switch resp.StatusCode {
 	case http.StatusTooManyRequests:
 	case http.StatusForbidden:
-		quotaUsedUp := reset != "" && resp.Header.Get("X-Ratelimit-Remaining") == "0"
+		quotaUsedUp := reset != "" && resp.Header.Get(headerRateRemaining) == "0"
 		if retryAfter == "" && !quotaUsedUp {
 			return 0, false, false
 		}
@@ -120,15 +141,88 @@ func (c *Client) retryAfter(resp *http.Response) (time.Duration, bool, bool) {
 		return 0, false, false
 	}
 
-	if secs, err := strconv.Atoi(retryAfter); err == nil {
-		return time.Duration(secs) * time.Second, true, true
+	now := c.now()
+
+	if wait, err := parseRetryAfter(retryAfter, now); err == nil {
+		return wait, true, true
 	}
 
-	if epoch, err := strconv.ParseInt(reset, 10, 64); err == nil {
-		return max(time.Unix(epoch, 0).Sub(c.now()), 0), true, true
+	if wait, err := parseRateLimitReset(reset, now); err == nil {
+		return wait, true, true
 	}
 
 	return 0, false, true
+}
+
+// parseRetryAfter reads Retry-After as delay-seconds or as an HTTP date
+// (RFC 9110, section 10.2.3). ParseUint takes digits only, as the grammar
+// does: no sign, so "-5" and "+5" are invalid. A number too large for
+// uint64 is still valid and means the longest wait.
+func parseRetryAfter(value string, now time.Time) (time.Duration, error) {
+	seconds, err := strconv.ParseUint(value, 10, 64)
+	if err == nil || errors.Is(err, strconv.ErrRange) {
+		if seconds >= uint64(maxRetryWait/time.Second) {
+			return maxRetryWait, nil
+		}
+
+		return time.Duration(seconds) * time.Second, nil
+	}
+
+	retryAt, err := http.ParseTime(value)
+	if err != nil {
+		return 0, fmt.Errorf("%w %s value %q", errInvalidHeader, headerRetryAfter, value)
+	}
+
+	if !retryAt.After(now) {
+		return 0, nil
+	}
+
+	return capRetryWait(retryAt.Sub(now)), nil
+}
+
+// parseRateLimitReset returns the time left until the X-Ratelimit-Reset
+// epoch, in seconds.
+func parseRateLimitReset(value string, now time.Time) (time.Duration, error) {
+	reset, err := strconv.ParseUint(value, 10, 64)
+	if err != nil && !errors.Is(err, strconv.ErrRange) {
+		return 0, fmt.Errorf("%w %s value %q", errInvalidHeader, headerRateReset, value)
+	}
+
+	nowSeconds := uint64(max(now.Unix(), 0))
+	if reset <= nowSeconds {
+		return 0, nil
+	}
+
+	waitSeconds := reset - nowSeconds
+	if waitSeconds >= uint64(maxRetryWait/time.Second) {
+		return maxRetryWait, nil
+	}
+
+	return time.Duration(waitSeconds) * time.Second, nil
+}
+
+func capRetryWait(wait time.Duration) time.Duration {
+	if wait > maxRetryWait {
+		return maxRetryWait
+	}
+
+	return wait
+}
+
+func sleepWithContext(ctx context.Context, wait time.Duration) error {
+	if wait <= 0 {
+		return nil
+	}
+
+	timer := time.NewTimer(wait)
+	defer timer.Stop()
+
+	select {
+	case <-ctx.Done():
+		return fmt.Errorf("waiting to retry: %w", ctx.Err())
+	case <-timer.C:
+		return nil
+	}
 }
 
 func read(resp *http.Response) ([]byte, error) {

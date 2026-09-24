@@ -1,6 +1,7 @@
 package httpclient
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -46,7 +47,11 @@ func newClient(t *testing.T, steps ...step) (*Client, string, *[]time.Duration) 
 	t.Cleanup(srv.Close)
 
 	c := New(srv.Client())
-	c.sleep = func(d time.Duration) { waits = append(waits, d) }
+	c.sleep = func(_ context.Context, d time.Duration) error {
+		waits = append(waits, d)
+
+		return nil
+	}
 	c.now = func() time.Time { return time.Unix(1000, 0) }
 
 	return c, srv.URL + "/file.txt", &waits
@@ -272,5 +277,87 @@ func TestGetGivesUpSoonerWithoutAWaitFromTheServer(t *testing.T) {
 	}
 	if want := []time.Duration{time.Minute, 2 * time.Minute, 4 * time.Minute}; !slices.Equal(*waits, want) {
 		t.Errorf("waits = %v, want %v", *waits, want)
+	}
+}
+
+func TestGetCapsTheWaitTheServerAsksFor(t *testing.T) {
+	c, url, waits := newClient(t,
+		step{status: http.StatusTooManyRequests, retryAfter: "86400"},
+		step{status: http.StatusForbidden, rateReset: "90000", remaining: "0"},
+	)
+
+	if _, err := c.Get(url, nil); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if want := []time.Duration{maxRetryWait, maxRetryWait}; !slices.Equal(*waits, want) {
+		t.Errorf("waits = %v, want %v", *waits, want)
+	}
+}
+
+func TestGetHonorsARetryAfterDate(t *testing.T) {
+	date := time.Unix(1007, 0).UTC().Format(http.TimeFormat)
+	c, url, waits := newClient(t, step{status: http.StatusTooManyRequests, retryAfter: date})
+
+	if _, err := c.Get(url, nil); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if want := []time.Duration{7 * time.Second}; !slices.Equal(*waits, want) {
+		t.Errorf("waits = %v, want %v", *waits, want)
+	}
+}
+
+func TestGetIgnoresANegativeRetryAfter(t *testing.T) {
+	c, url, waits := newClient(t, step{status: http.StatusTooManyRequests, retryAfter: "-5"})
+
+	if _, err := c.Get(url, nil); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if want := []time.Duration{time.Minute}; !slices.Equal(*waits, want) {
+		t.Errorf("waits = %v, want %v", *waits, want)
+	}
+}
+
+// TestGetWithContextAlreadyCancelled verifies that a pre-cancelled context returns immediately.
+func TestGetWithContextAlreadyCancelled(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write([]byte("body"))
+	}))
+	defer ts.Close()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	client := New(nil)
+	_, err := client.GetWithContext(ctx, ts.URL, nil)
+	if err == nil {
+		t.Fatal("expected error for cancelled context, got nil")
+	}
+}
+
+// TestGetWithContextCancelInterruptsBackoff verifies that an explicit
+// context cancellation does interrupt a Retry-After sleep.
+func TestGetWithContextCancelInterruptsBackoff(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Retry-After", "30")
+		w.WriteHeader(http.StatusTooManyRequests)
+	}))
+	defer ts.Close()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	go func() {
+		time.Sleep(200 * time.Millisecond)
+		cancel()
+	}()
+
+	start := time.Now()
+	client := New(nil)
+	_, err := client.GetWithContext(ctx, ts.URL, nil)
+	elapsed := time.Since(start)
+
+	if err == nil {
+		t.Fatal("expected error for cancelled context, got nil")
+	}
+	if elapsed >= 5*time.Second {
+		t.Errorf("cancel did not interrupt backoff: elapsed %v", elapsed)
 	}
 }

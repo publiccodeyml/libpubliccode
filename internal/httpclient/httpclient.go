@@ -74,6 +74,8 @@ func (c *Client) Get(url string, headers map[string]string) ([]byte, error) {
 // GetWithContext is Get with a context. The request and the waits between
 // retries stop when ctx is cancelled or reaches its deadline.
 func (c *Client) GetWithContext(ctx context.Context, url string, headers map[string]string) ([]byte, error) {
+	blind := 0
+
 	for attempt := 1; ; attempt++ {
 		resp, err := c.do(ctx, url, headers)
 		if err != nil {
@@ -87,13 +89,14 @@ func (c *Client) GetWithContext(ctx context.Context, url string, headers map[str
 
 		_ = resp.Body.Close()
 
-		limit := maxAttempts
+		// The backoff doubles per blind retry, not per attempt: retries
+		// where the server gave a time must not inflate it.
 		if !told {
-			limit = maxBlindAttempts
-			wait = time.Minute << (attempt - 1)
+			blind++
+			wait = time.Minute << (blind - 1)
 		}
 
-		if attempt == limit {
+		if attempt >= maxAttempts || blind >= maxBlindAttempts {
 			return nil, fmt.Errorf("%w after %d attempts: %s", ErrRateLimited, attempt, resp.Status)
 		}
 

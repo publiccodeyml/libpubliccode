@@ -361,3 +361,28 @@ func TestGetWithContextCancelInterruptsBackoff(t *testing.T) {
 		t.Errorf("cancel did not interrupt backoff: elapsed %v", elapsed)
 	}
 }
+
+func TestGetCountsBlindRetriesOnTheirOwn(t *testing.T) {
+	steps := []step{
+		{status: http.StatusTooManyRequests, retryAfter: "1"},
+		{status: http.StatusTooManyRequests, retryAfter: "1"},
+		{status: http.StatusTooManyRequests, retryAfter: "1"},
+		{status: http.StatusTooManyRequests, retryAfter: "1"},
+	}
+	for range maxBlindAttempts {
+		steps = append(steps, step{status: http.StatusTooManyRequests})
+	}
+	c, url, waits := newClient(t, steps...)
+
+	_, err := c.Get(url, nil)
+	if !errors.Is(err, ErrRateLimited) {
+		t.Errorf("err = %v, want ErrRateLimited", err)
+	}
+	want := []time.Duration{
+		time.Second, time.Second, time.Second, time.Second,
+		time.Minute, 2 * time.Minute, 4 * time.Minute,
+	}
+	if !slices.Equal(*waits, want) {
+		t.Errorf("waits = %v, want %v", *waits, want)
+	}
+}

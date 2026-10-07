@@ -3,7 +3,7 @@ module github.com/publiccodeyml/libpubliccode/v5
 require (
 	github.com/alranel/go-vcsurl/v2 v2.1.1
 	github.com/github/go-spdx/v2 v2.7.0
-	github.com/go-playground/locales v0.14.1
+	github.com/go-playground/locales v0.14.2
 	github.com/go-playground/universal-translator v0.18.2
 	github.com/go-playground/validator/v10 v10.30.5
 	github.com/goccy/go-yaml v1.19.2

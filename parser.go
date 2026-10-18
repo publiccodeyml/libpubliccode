@@ -336,7 +336,7 @@ func (p *Parser) parseAndValidate(in io.Reader, fileURL *url.URL) (PublicCode, e
 
 	var ve ValidationResults
 
-	if slices.Contains(SupportedVersions, version) && version != "0" && !strings.HasPrefix(version, "0.7") {
+	if slices.Contains(SupportedVersions, version) && version != "0" && !strings.HasPrefix(version, "0.8") {
 		latestVersion := SupportedVersions[len(SupportedVersions)-1]
 		line, column := getPositionInFile("publiccodeYmlVersion", file)
 

@@ -116,7 +116,7 @@ func TestInvalidTestcasesV0(t *testing.T) {
 			ValidationError{
 				"",
 				"publiccodeYmlVersion",
-				"unsupported version: '1'. Supported versions: 0, 0.2, 0.2.0, 0.2.1, 0.2.2, 0.3, 0.3.0, 0.4, 0.4.0, 0.5.0, 0.5, 0.7.0, 0.7",
+				"unsupported version: '1'. Supported versions: 0, 0.2, 0.2.0, 0.2.1, 0.2.2, 0.3, 0.3.0, 0.4, 0.4.0, 0.5.0, 0.5, 0.7.0, 0.7, 0.8.0, 0.8",
 				0,
 				0,
 			},
@@ -615,13 +615,16 @@ func TestValidWithWarningsTestcasesV0(t *testing.T) {
 			ValidationWarning{"", "description.en.genericName", "This key is DEPRECATED and will be removed in the future. It's safe to drop it", 23, 5},
 		},
 		"valid.minimal.v0.2.yml": ValidationResults{
-			ValidationWarning{"", "publiccodeYmlVersion", "v0.2 is not the latest version, use '0'. Parsing this file as v0.7.", 1, 1},
+			ValidationWarning{"", "publiccodeYmlVersion", "v0.2 is not the latest version, use '0'. Parsing this file as v0.8.", 1, 1},
 		},
 		"valid.minimal.v0.3.yml": ValidationResults{
-			ValidationWarning{"", "publiccodeYmlVersion", "v0.3 is not the latest version, use '0'. Parsing this file as v0.7.", 1, 1},
+			ValidationWarning{"", "publiccodeYmlVersion", "v0.3 is not the latest version, use '0'. Parsing this file as v0.8.", 1, 1},
 		},
 		"valid.minimal.v0.4.yml": ValidationResults{
-			ValidationWarning{"", "publiccodeYmlVersion", "v0.4 is not the latest version, use '0'. Parsing this file as v0.7.", 1, 1},
+			ValidationWarning{"", "publiccodeYmlVersion", "v0.4 is not the latest version, use '0'. Parsing this file as v0.8.", 1, 1},
+		},
+		"valid.minimal.v0.7.yml": ValidationResults{
+			ValidationWarning{"", "publiccodeYmlVersion", "v0.7 is not the latest version, use '0'. Parsing this file as v0.8.", 1, 1},
 		},
 		"valid.mime_types.yml": ValidationResults{
 			ValidationWarning{"", "inputTypes", "This key is DEPRECATED and will be removed in the future. It's safe to drop it", 48, 1},

@@ -223,6 +223,14 @@ func validateFieldsV0(publiccode PublicCode, parser *Parser, network bool, baseU
 			}
 		}
 
+		if len(desc.Videos) > 0 {
+			vr = append(vr, newValidationWarning(
+				fmt.Sprintf("description.%s.videos", lang),
+				"This key is DEPRECATED and will be removed in the future. "+
+					"Link videos from the documentation or the website instead",
+			))
+		}
+
 		for i, v := range desc.Videos {
 			err := parser.checkOEmbedURL((*url.URL)(v))
 			if err != nil {

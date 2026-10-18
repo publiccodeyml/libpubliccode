@@ -158,6 +158,13 @@ func validateFieldsV0(publiccode PublicCode, parser *Parser, network bool, baseU
 		))
 	}
 
+	if publiccodev0.DependsOn != nil && publiccodev0.DependsOn.Open != nil {
+		vr = append(vr, newValidationWarning(
+			"dependsOn.open",
+			"This key is DEPRECATED and will be removed in the future. It's safe to drop it",
+		))
+	}
+
 	if publiccodev0.OutputTypes != nil {
 		vr = append(vr, newValidationWarning(
 			"outputTypes",

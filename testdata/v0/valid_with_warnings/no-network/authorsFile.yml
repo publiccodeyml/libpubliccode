@@ -88,14 +88,6 @@ localisation:
     - de
 
 dependsOn: # List of dependencies. The only mandatory list is the proprietary one
-  open: # List of open dependencies. Optional
-    - name: MySQL
-      versionMin: "1.1"
-      versionMax: "1.3"
-      optional: true
-    - name: PostgreSQL
-      version: "3.2"
-      optional: true
   # List of proprietary software which is a dependency for using this product. This includes runtime dependencies
   proprietary:
     - name: Oracle

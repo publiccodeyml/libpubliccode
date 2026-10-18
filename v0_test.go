@@ -641,6 +641,9 @@ func TestValidWithWarningsTestcasesV0(t *testing.T) {
 			ValidationWarning{"", "intendedAudience.countries[1]", "Lowercase country codes are DEPRECATED. Use uppercase instead ('DE')", 32, 7},
 			ValidationWarning{"", "intendedAudience.unsupportedCountries[0]", "Lowercase country codes are DEPRECATED. Use uppercase instead ('US')", 34, 7},
 		},
+		"valid_with_government_scope.yml": ValidationResults{
+			ValidationWarning{"", "intendedAudience.scope[1]", "The 'government' scope is DEPRECATED and will be removed in the future. It's safe to drop it", 19, 7},
+		},
 		"valid_with_legal_repoOwner.yml": ValidationResults{
 			ValidationWarning{"", "legal.repoOwner", "This key is DEPRECATED and will be removed in the future. Use 'organisation.name' instead", 70, 3},
 		},

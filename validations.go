@@ -158,7 +158,7 @@ func (p *Parser) fileExists(u url.URL, network bool) (bool, error) {
 // isImageFile check whether the string is a valid image. It also checks if the file exists.
 // It returns true if it is an image or false if it's not and an error, if any.
 func (p *Parser) isImageFile(u url.URL, network bool) (bool, error) {
-	validExt := []string{".jpg", ".png"}
+	validExt := []string{".png", ".jpg", ".jpeg", ".webp", ".avif"}
 	ext := strings.ToLower(filepath.Ext(u.Path))
 
 	if !slices.Contains(validExt, ext) {
@@ -171,7 +171,7 @@ func (p *Parser) isImageFile(u url.URL, network bool) (bool, error) {
 // validLogo returns true if the file path in value is a valid logo.
 // It also checks if the file exists.
 func (p *Parser) validLogo(u url.URL, network bool) (bool, error) {
-	validExt := []string{".svg", ".svgz", ".png"}
+	validExt := []string{".svg", ".svgz", ".png", ".jpg", ".jpeg", ".webp", ".avif"}
 	ext := strings.ToLower(filepath.Ext(u.Path))
 
 	// Check for valid extension.

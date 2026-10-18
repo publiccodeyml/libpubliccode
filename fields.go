@@ -112,6 +112,12 @@ func validateFieldsV0(publiccode PublicCode, parser *Parser, network bool, baseU
 		}
 
 		if publiccodev0.IntendedAudience.UnsupportedCountries != nil {
+			vr = append(vr, newValidationWarning(
+				"intendedAudience.unsupportedCountries",
+				"This key is DEPRECATED and will be removed in the future. "+
+					"Use 'intendedAudience.countries' to list the targeted countries instead",
+			))
+
 			for i, c := range *publiccodev0.IntendedAudience.UnsupportedCountries {
 				if sharedValidate.Var(c, "iso3166_1_alpha2_lower_or_upper") == nil && c == strings.ToLower(c) {
 					vr = append(vr, newValidationWarningf(

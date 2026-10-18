@@ -363,6 +363,19 @@ func (p *Parser) parseAndValidate(in io.Reader, fileURL *url.URL) (PublicCode, e
 		validateFields = validateFieldsV0
 
 		decodeResults = decode(b, v0, file)
+
+		if isBasedOnIsString(file) {
+			line, column := getPositionInFile("isBasedOn", file)
+
+			ve = append(ve, ValidationWarning{
+				Key: "isBasedOn",
+				Description: "The single string form is DEPRECATED and will be removed in the future. " +
+					"Use a one element array instead",
+				Line:   line,
+				Column: column,
+			})
+		}
+
 		publiccode = v0
 	} else {
 		v1 := &PublicCodeV1{}
@@ -521,6 +534,30 @@ func getPositionInFile(key string, file *ast.File) (int, int) {
 	line, col := findKeyPos(file.Docs[0].Body, parts)
 
 	return line, col
+}
+
+// isBasedOnIsString reports whether the top level isBasedOn is a single
+// string. It has to look at the AST because UrlOrUrlArray folds both forms
+// into a slice, losing which one was used.
+func isBasedOnIsString(file *ast.File) bool {
+	if len(file.Docs) == 0 {
+		return false
+	}
+
+	root, ok := file.Docs[0].Body.(*ast.MappingNode)
+	if !ok {
+		return false
+	}
+
+	for _, mv := range root.Values {
+		if tok := mv.Key.GetToken(); tok != nil && tok.Value == "isBasedOn" {
+			_, isString := mv.Value.(*ast.StringNode)
+
+			return isString
+		}
+	}
+
+	return false
 }
 
 // splitKeyParts splits a dot-separated key path into parts, preserving array

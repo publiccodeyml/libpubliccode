@@ -173,6 +173,7 @@ func TestInvalidTestcasesV0(t *testing.T) {
 			ValidationError{"", "isBasedOn[1]", "isBasedOn[1] must be a valid URL", 11, 5},
 		},
 		"isBasedOn_bad_url_string.yml": ValidationResults{
+			ValidationWarning{"", "isBasedOn", "The single string form is DEPRECATED and will be removed in the future. Use a one element array instead", 9, 1},
 			ValidationError{"", "isBasedOn[0]", "isBasedOn[0] must be a valid URL", 9, 1},
 		},
 
@@ -665,6 +666,9 @@ func TestValidWithWarningsTestcasesV0(t *testing.T) {
 		"valid_with_unsupportedCountries.yml": ValidationResults{
 			ValidationWarning{"", "intendedAudience.unsupportedCountries", "This key is DEPRECATED and will be removed in the future. Use 'intendedAudience.countries' to list the targeted countries instead", 19, 3},
 		},
+		"valid_with_isBasedOn_string.yml": ValidationResults{
+			ValidationWarning{"", "isBasedOn", "The single string form is DEPRECATED and will be removed in the future. Use a one element array instead", 6, 1},
+		},
 		"valid_with_legal_repoOwner.yml": ValidationResults{
 			ValidationWarning{"", "legal.repoOwner", "This key is DEPRECATED and will be removed in the future. Use 'organisation.name' instead", 62, 3},
 		},
@@ -707,6 +711,7 @@ func TestDecodeValueErrorsRemote(t *testing.T) {
 		// Pinned to a commit: fetching from main means a testdata change
 		// breaks this test in every PR until the change itself lands.
 		{"https://raw.githubusercontent.com/italia/publiccode-parser-go/389af926bcb5bcb723b56d8e390585f2d0f2c7e8/testdata/v0/valid_with_warnings/valid_with_lowercase_countries.yml", ValidationResults{
+			ValidationWarning{"", "isBasedOn", "The single string form is DEPRECATED and will be removed in the future. Use a one element array instead", 7, 1},
 			ValidationWarning{"", "intendedAudience.countries[0]", "Lowercase country codes are DEPRECATED. Use uppercase instead ('IT')", 31, 7},
 			ValidationWarning{"", "intendedAudience.countries[1]", "Lowercase country codes are DEPRECATED. Use uppercase instead ('DE')", 32, 7},
 			ValidationWarning{"", "intendedAudience.unsupportedCountries", "This key is DEPRECATED and will be removed in the future. Use 'intendedAudience.countries' to list the targeted countries instead", 33, 3},

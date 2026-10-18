@@ -15,10 +15,6 @@ platforms:
 categories:
   - cloud-management
 
-usedBy:
-  - Comune di Firenze
-  - Comune di Roma
-
 roadmap: "https://designers.italia.it/roadmap/"
 
 developmentStatus: development

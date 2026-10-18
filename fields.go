@@ -129,6 +129,21 @@ func validateFieldsV0(publiccode PublicCode, parser *Parser, network bool, baseU
 		}
 	}
 
+	if publiccodev0.Maintenance.Contacts != nil {
+		for i, contact := range *publiccodev0.Maintenance.Contacts {
+			if contact.Phone == nil || *contact.Phone == "" {
+				continue
+			}
+
+			if sharedValidate.Var(*contact.Phone, "e164") != nil {
+				vr = append(vr, newValidationWarning(
+					fmt.Sprintf("maintenance.contacts[%d].phone", i),
+					"Phone numbers SHOULD use the E.164 format, e.g. '+3923113215112'",
+				))
+			}
+		}
+	}
+
 	if publiccodev0.Legal.AuthorsFile != nil {
 		vr = append(vr, newValidationWarning(
 			"legal.authorsFile",

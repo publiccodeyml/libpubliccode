@@ -632,6 +632,9 @@ func TestValidWithWarningsTestcasesV0(t *testing.T) {
 		"unicode_grapheme_clusters.yml": ValidationResults{
 			ValidationWarning{"", "description.en.genericName", "This key is DEPRECATED and will be removed in the future. It's safe to drop it", 23, 5},
 		},
+		"maintenance_contacts_phone_not_e164.yml": ValidationResults{
+			ValidationWarning{"", "maintenance.contacts[0].phone", "Phone numbers SHOULD use the E.164 format, e.g. '+3923113215112'", 46, 7},
+		},
 		"valid.minimal.v0.2.yml": ValidationResults{
 			ValidationWarning{"", "publiccodeYmlVersion", "v0.2 is not the latest version, use '0'. Parsing this file as v0.8.", 1, 1},
 		},
@@ -716,6 +719,9 @@ func TestDecodeValueErrorsRemote(t *testing.T) {
 			ValidationWarning{"", "intendedAudience.countries[1]", "Lowercase country codes are DEPRECATED. Use uppercase instead ('DE')", 32, 7},
 			ValidationWarning{"", "intendedAudience.unsupportedCountries", "This key is DEPRECATED and will be removed in the future. Use 'intendedAudience.countries' to list the targeted countries instead", 33, 3},
 			ValidationWarning{"", "intendedAudience.unsupportedCountries[0]", "Lowercase country codes are DEPRECATED. Use uppercase instead ('US')", 34, 7},
+			ValidationWarning{"", "maintenance.contacts[0].phone", "Phone numbers SHOULD use the E.164 format, e.g. '+3923113215112'", 83, 7},
+			ValidationWarning{"", "maintenance.contacts[1].phone", "Phone numbers SHOULD use the E.164 format, e.g. '+3923113215112'", 87, 7},
+			ValidationWarning{"", "maintenance.contacts[2].phone", "Phone numbers SHOULD use the E.164 format, e.g. '+3923113215112'", 91, 7},
 			ValidationWarning{"", "dependsOn.open", "This key is DEPRECATED and will be removed in the future. It's safe to drop it", 102, 3},
 			ValidationWarning{"", "usedBy", "This key is DEPRECATED and will be removed in the future. It's safe to drop it", 18, 1},
 			ValidationWarning{"", "description.en.videos", "This key is DEPRECATED and will be removed in the future. Link videos from the documentation or the website instead", 62, 5},

@@ -27,8 +27,6 @@ intendedAudience:
   countries:
     - IT
     - DE
-  unsupportedCountries: # Explicitly unsupported countries
-    - US
 
 description:
   en:

@@ -8,7 +8,7 @@ applicationSuite: MegaProductivitySuite
 url: "https://github.com/italia/developers.italia.it.git"
 landingURL: "https://developers.italia.it"
 
-isBasedOn: "https://github.com/italia/developers.italia.it.git"
+isBasedOn: ["https://github.com/italia/developers.italia.it.git"]
 softwareVersion: "1.0"
 releaseDate: 2017-04-15
 logo: assets/img/logo.png

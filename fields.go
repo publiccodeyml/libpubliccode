@@ -100,6 +100,17 @@ func validateFieldsV0(publiccode PublicCode, parser *Parser, network bool, baseU
 			}
 		}
 
+		if publiccodev0.IntendedAudience.Scope != nil {
+			for i, scope := range *publiccodev0.IntendedAudience.Scope {
+				if scope == "government" {
+					vr = append(vr, newValidationWarning(
+						fmt.Sprintf("intendedAudience.scope[%d]", i),
+						"The 'government' scope is DEPRECATED and will be removed in the future. It's safe to drop it",
+					))
+				}
+			}
+		}
+
 		if publiccodev0.IntendedAudience.UnsupportedCountries != nil {
 			for i, c := range *publiccodev0.IntendedAudience.UnsupportedCountries {
 				if sharedValidate.Var(c, "iso3166_1_alpha2_lower_or_upper") == nil && c == strings.ToLower(c) {

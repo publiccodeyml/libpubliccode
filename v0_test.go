@@ -216,6 +216,18 @@ func TestInvalidTestcasesV0(t *testing.T) {
 		"logo_file_scheme3.yml": ValidationResults{
 			ValidationError{"", "logo", "is a file:// URL. Only relative paths or HTTP(s) URLs allowed", 18, 1},
 		},
+		"logo_file_scheme_uppercase.yml": ValidationResults{
+			ValidationError{"", "logo", "is a file:// URL. Only relative paths or HTTP(s) URLs allowed", 18, 1},
+		},
+		"logo_file_scheme_mixed_case.yml": ValidationResults{
+			ValidationError{"", "logo", "is a file:// URL. Only relative paths or HTTP(s) URLs allowed", 18, 1},
+		},
+		"logo_ftp_scheme.yml": ValidationResults{
+			ValidationError{"", "logo", "has an unsupported URL scheme 'ftp'. Only relative paths or HTTP(s) URLs allowed", 18, 1},
+		},
+		"logo_data_scheme.yml": ValidationResults{
+			ValidationError{"", "logo", "has an unsupported URL scheme 'data'. Only relative paths or HTTP(s) URLs allowed", 18, 1},
+		},
 		// Local publiccode.yml and URL in logo: should look for the logo remotely
 		"logo_missing_url.yml": ValidationResults{
 			ValidationError{"", "logo", "HTTP GET failed for https://google.com/no_such_file.png: not found", 18, 1},
@@ -465,6 +477,22 @@ func TestInvalidTestcasesV0(t *testing.T) {
 				"",
 				"legal.authorsFile",
 				"'" + cwd + "/testdata/v0/invalid/no_such_authors_file.txt' does not exist: no such file: " + cwd + "/testdata/v0/invalid/no_such_authors_file.txt",
+				42,
+				3,
+			},
+		},
+		"legal_authorsFile_file_scheme_uppercase.yml": ValidationResults{
+			ValidationWarning{
+				"",
+				"legal.authorsFile",
+				"This key is DEPRECATED and will be removed in the future. It's safe to drop it",
+				42,
+				3,
+			},
+			ValidationError{
+				"",
+				"legal.authorsFile",
+				"is a file:// URL. Only relative paths or HTTP(s) URLs allowed",
 				42,
 				3,
 			},

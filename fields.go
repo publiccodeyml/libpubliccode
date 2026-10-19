@@ -3,11 +3,15 @@ package publiccode
 import (
 	"fmt"
 	"net/url"
+	"regexp"
 	"strings"
 
 	"github.com/alranel/go-vcsurl/v2"
 	urlutil "github.com/publiccodeyml/libpubliccode/v5/internal"
 )
+
+// RFC 3986 scheme = ALPHA *( ALPHA / DIGIT / "+" / "-" / "." ).
+var urlSchemeRegexp = regexp.MustCompile(`^([A-Za-z][A-Za-z0-9+.-]*):`)
 
 type validateFn func(publiccode PublicCode, parser *Parser, network bool, baseURL *url.URL) error
 
@@ -453,8 +457,19 @@ func isRelativePathOrURL(content string, keyName string) (bool, error) {
 		return false, newValidationError(keyName, "is an absolute path. Only relative paths or HTTP(s) URLs allowed")
 	}
 
-	if strings.HasPrefix(content, "file:") {
-		return false, newValidationError(keyName, "is a file:// URL. Only relative paths or HTTP(s) URLs allowed")
+	// Not url.Parse: it fails on values like "file:///%zz", which would then
+	// pass as relative paths. URL schemes are case-insensitive (RFC 3986).
+	if m := urlSchemeRegexp.FindStringSubmatch(content); m != nil {
+		switch scheme := strings.ToLower(m[1]); scheme {
+		case "http", "https":
+			return true, nil
+		case "file":
+			return false, newValidationError(keyName, "is a file:// URL. Only relative paths or HTTP(s) URLs allowed")
+		default:
+			return false, newValidationErrorf(
+				keyName, "has an unsupported URL scheme '%s'. Only relative paths or HTTP(s) URLs allowed", scheme,
+			)
+		}
 	}
 
 	return true, nil

@@ -19,7 +19,7 @@ updates:
       # Our own libraries: we control what goes into them, and a fix there
       # is usually the reason for the release, so waiting a week defeats it.
       exclude:
-        - "github.com/italia/*"
+        - "github.com/publiccodeyml/*"
     groups:
       go-deps:
         patterns:

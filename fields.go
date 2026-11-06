@@ -257,6 +257,10 @@ func validateFieldsV0(publiccode PublicCode, parser *Parser, network bool, baseU
 		}
 
 		for i, v := range desc.Videos {
+			if v == nil {
+				continue
+			}
+
 			err := parser.checkOEmbedURL((*url.URL)(v))
 			if err != nil {
 				vr = append(vr, newValidationErrorf(
@@ -431,6 +435,10 @@ func validateFieldsV1(publiccode PublicCode, parser *Parser, network bool, baseU
 		}
 
 		for i, v := range desc.Videos {
+			if v == nil {
+				continue
+			}
+
 			err := parser.checkOEmbedURL((*url.URL)(v))
 			if err != nil {
 				vr = append(vr, newValidationErrorf(

@@ -77,7 +77,7 @@ type DescV1 struct {
 	APIDocumentation *URL      `json:"apiDocumentation,omitempty" validate:"omitnil,url_http_url"         yaml:"apiDocumentation,omitempty"`
 	Features         *[]string `json:"features,omitempty"         validate:"gt=0,dive"                    yaml:"features,omitempty"`
 	Screenshots      []string  `json:"screenshots,omitempty"      yaml:"screenshots,omitempty"`
-	Videos           []*URL    `json:"videos,omitempty"           validate:"dive,omitnil,url_http_url"    yaml:"videos,omitempty"`
+	Videos           []*URL    `json:"videos,omitempty"           validate:"dive,required,url_http_url"   yaml:"videos,omitempty"`
 	Awards           []string  `json:"awards,omitempty"           yaml:"awards,omitempty"`
 }
 

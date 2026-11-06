@@ -39,6 +39,10 @@ description:
     videos:
       # Should NOT validate: not a valid URL
       - ABC
+      # Should NOT validate: null is not a URL
+      -
+      # Should NOT validate: an empty string is not a URL
+      - ""
 
 legal:
   license: AGPL-3.0-or-later

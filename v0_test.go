@@ -445,8 +445,11 @@ func TestInvalidTestcasesV0(t *testing.T) {
 		},
 		"description_en_videos_invalid.yml": ValidationResults{
 			ValidationError{"", "description.en.videos[0]", "videos[0] must be an HTTP URL", 41, 9},
+			ValidationError{"", "description.en.videos[1]", "videos[1] is a required field", 43, 8},
+			ValidationError{"", "description.en.videos[2]", "videos[2] must be an HTTP URL", 45, 9},
 			ValidationWarning{"", "description.en.videos", "This key is DEPRECATED and will be removed in the future. Link videos from the documentation or the website instead", 39, 5},
 			ValidationError{"", "description.en.videos[0]", "'ABC' is not a valid video URL supporting oEmbed: invalid oEmbed link: ABC", 41, 9},
+			ValidationError{"", "description.en.videos[2]", "'' is not a valid video URL supporting oEmbed: invalid oEmbed link: ", 45, 9},
 		},
 		"description_en_videos_invalid_oembed.yml": ValidationResults{
 			ValidationWarning{"", "description.en.videos", "This key is DEPRECATED and will be removed in the future. Link videos from the documentation or the website instead", 39, 5},

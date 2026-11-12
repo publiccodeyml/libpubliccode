@@ -385,9 +385,6 @@ func TestInvalidTestcasesV0(t *testing.T) {
 		"description_invalid_language.yml": ValidationResults{
 			ValidationError{"", "description", "description must be a valid BCP 47 language", 18, 1},
 		},
-		"description_en_features_missing.yml": ValidationResults{
-			ValidationError{"", "description.en.features", "features must contain more than 0 items", 22, 5},
-		},
 		"description_en_features_empty.yml": ValidationResults{
 			ValidationError{"", "description.en.features", "features must contain more than 0 items", 39, 5},
 		},
@@ -622,7 +619,6 @@ func TestInvalidTestcasesV0(t *testing.T) {
 			ValidationError{"", "softwareType", "softwareType is a required field", 1, 1},
 			ValidationError{"", "description[en-US].shortDescription", "shortDescription is a required field", 3, 10},
 			ValidationError{"", "description[en-US].longDescription", "longDescription is a required field", 3, 10},
-			ValidationError{"", "description[en-US].features", "features must contain more than 0 items", 3, 10},
 			ValidationError{"", "legal.license", "license is a required field", 5, 8},
 			ValidationError{"", "maintenance.type", "type is a required field", 6, 14},
 			ValidationError{"", "localisation.localisationReady", "localisationReady is a required field", 4, 15},

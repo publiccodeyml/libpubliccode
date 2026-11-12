@@ -90,7 +90,7 @@ type DescV0 struct {
 	LongDescription  string    `json:"longDescription,omitempty"  validate:"required,umin=150,umax=10000" yaml:"longDescription,omitempty"`
 	Documentation    *URL      `json:"documentation,omitempty"    validate:"omitnil,url_http_url"         yaml:"documentation,omitempty"`
 	APIDocumentation *URL      `json:"apiDocumentation,omitempty" validate:"omitnil,url_http_url"         yaml:"apiDocumentation,omitempty"`
-	Features         *[]string `json:"features,omitempty"         validate:"gt=0,dive"                    yaml:"features,omitempty"`
+	Features         *[]string `json:"features,omitempty"         validate:"omitnil,gt=0,dive"            yaml:"features,omitempty"`
 	Screenshots      []string  `json:"screenshots,omitempty"      yaml:"screenshots,omitempty"`
 	Videos           []*URL    `json:"videos,omitempty"           validate:"dive,required,url_http_url"   yaml:"videos,omitempty"`
 	Awards           []string  `json:"awards,omitempty"           yaml:"awards,omitempty"`

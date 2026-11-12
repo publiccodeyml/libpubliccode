@@ -1,12 +1,14 @@
 package publiccode
 
 import (
+	"bytes"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"image"
 	"image/png"
+	"io"
 	"math/rand"
 	"net/url"
 	"os"
@@ -179,51 +181,40 @@ func (p *Parser) validLogo(u url.URL, network bool) (bool, error) {
 		return false, fmt.Errorf("invalid file extension for: %s", netutil.DisplayURL(&u)) //nolint:err113,lll // dynamic message with path context
 	}
 
-	if exists, err := p.fileExists(u, network); !exists {
-		return false, err
-	}
+	var content io.Reader
 
-	var localPath string
-	// Remote. Create a temp dir, download and check the file. Remove the temp dir.
-	if u.Scheme != "file" {
-		var err error
+	if u.Scheme == "file" {
+		if exists, err := p.fileExists(u, network); !exists {
+			return false, err
+		}
 
-		if !network {
+		if ext != ".png" {
 			return true, nil
 		}
 
-		localPath, err = netutil.DownloadTmpFile(p.httpclient, &u, getHeaderFromDomain(p.domain, u.String()))
+		f, err := os.Open(u.Path)
 		if err != nil {
-			return false, fmt.Errorf("downloading %s: %w", u.String(), err)
-		}
-
-		defer func() {
-			if localPath == "" {
-				return
-			}
-
-			if err := os.Remove(localPath); err != nil { //nolint:gosec // G703: path from validated download
-				fmt.Fprintf(os.Stderr, "failed to remove %s: %v\n", localPath, err)
-			}
-
-			dir := path.Dir(localPath)
-			if err = os.Remove(dir); err != nil { //nolint:gosec // G703: path from validated download
-				fmt.Fprintf(os.Stderr, "failed to remove %s: %v\n", dir, err)
-			}
-		}()
-	} else {
-		localPath = u.Path
-	}
-
-	if ext == ".png" {
-		f, err := os.Open(localPath) //nolint:gosec // G703: path from validated download
-		if err != nil {
-			return false, fmt.Errorf("opening %s: %w", localPath, err)
+			return false, fmt.Errorf("opening %s: %w", u.Path, err)
 		}
 
 		defer f.Close()
 
-		if _, _, err := image.DecodeConfig(f); err != nil {
+		content = f
+	} else {
+		if !network {
+			return true, nil
+		}
+
+		body, err := p.httpclient.Get(u.String(), getHeaderFromDomain(p.domain, u.String()))
+		if err != nil {
+			return false, fmt.Errorf("downloading %s: %w", u.String(), err)
+		}
+
+		content = bytes.NewReader(body)
+	}
+
+	if ext == ".png" {
+		if _, _, err := image.DecodeConfig(content); err != nil {
 			return false, fmt.Errorf("%w", err)
 		}
 	}

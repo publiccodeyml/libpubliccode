@@ -230,7 +230,7 @@ func TestInvalidTestcasesV0(t *testing.T) {
 		},
 		// Local publiccode.yml and URL in logo: should look for the logo remotely
 		"logo_missing_url.yml": ValidationResults{
-			ValidationError{"", "logo", "HTTP GET failed for https://google.com/no_such_file.png: not found", 18, 1},
+			ValidationError{"", "logo", "downloading https://google.com/no_such_file.png: not found", 18, 1},
 		},
 
 		// monochromeLogo
@@ -790,7 +790,7 @@ func TestRelativePathsOrURLs(t *testing.T) {
 		// Remote publiccode.yml and URL in logo:
 		// should look for the logo remotely
 		{"https://raw.githubusercontent.com/italia/publiccode-parser-go/2a1f25a36e0f2ab2d71efb67db8b66ff00573fbe/testdata/v0/invalid/logo_missing_url.yml", ValidationResults{
-			ValidationError{"", "logo", "HTTP GET failed for https://google.com/no_such_file.png: not found", 18, 1},
+			ValidationError{"", "logo", "downloading https://google.com/no_such_file.png: not found", 18, 1},
 		}},
 
 		// Local publiccode.yml and URL in logo:
@@ -798,7 +798,7 @@ func TestRelativePathsOrURLs(t *testing.T) {
 		//
 		// (already tested in TestInvalidTestcasesV0)
 		// "testdata/v0/invalid/logo_missing_url.yml", ValidationResults{
-		//	ValidationError{"logo", "HTTP GET failed for https://google.com/no_such_file.png: not found", 18, 1},
+		//	ValidationError{"logo", "downloading https://google.com/no_such_file.png: not found", 18, 1},
 		//}},
 	}
 

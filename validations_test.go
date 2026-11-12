@@ -1,9 +1,14 @@
 package publiccode
 
 import (
+	"bytes"
+	"image"
+	"image/png"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -197,7 +202,6 @@ func TestValidLogoRemoteDownloadFailure(t *testing.T) {
 	}
 }
 
-
 func TestIsReachableSuccess(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
@@ -209,5 +213,97 @@ func TestIsReachableSuccess(t *testing.T) {
 	reachable, err := p.isReachable(*parsed)
 	if !reachable {
 		t.Errorf("expected reachable for 200 response, got err: %v", err)
+	}
+}
+
+func TestValidLogoRemoteSingleFetch(t *testing.T) {
+	var pngBody bytes.Buffer
+	if err := png.Encode(&pngBody, image.NewRGBA(image.Rect(0, 0, 1, 1))); err != nil {
+		t.Fatal(err)
+	}
+
+	for _, tc := range []struct {
+		name      string
+		body      string
+		status    int
+		wantError string
+	}{
+		{name: "logo.svg", body: "<svg/>"},
+		{name: "logo.svgz", body: "compressed SVG"},
+		{name: "logo.jpg", body: "JPEG"},
+		{name: "logo.jpeg", body: "JPEG"},
+		{name: "logo.webp", body: "WebP"},
+		{name: "logo.avif", body: "AVIF"},
+		{name: "logo.png", body: pngBody.String()},
+		{name: "invalid.png", body: "invalid PNG", wantError: "image: unknown format"},
+		{name: "missing.svg", status: http.StatusInternalServerError, wantError: "unexpected status 500"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			tmp := t.TempDir()
+			t.Setenv("TMPDIR", tmp)
+			requests := 0
+			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				requests++
+				if r.Header.Get("Authorization") != "Basic dXNlcjpwYXNz" {
+					t.Error("missing configured authorization")
+				}
+				if requests > 1 {
+					w.WriteHeader(http.StatusInternalServerError)
+					return
+				}
+				if tc.status != 0 {
+					w.WriteHeader(tc.status)
+				}
+				_, _ = w.Write([]byte(tc.body))
+			}))
+			defer srv.Close()
+
+			p, err := NewParser(ParserConfig{AllowNetworkToPrivateHosts: true})
+			if err != nil {
+				t.Fatal(err)
+			}
+			u, _ := url.Parse(srv.URL + "/" + tc.name)
+			p.domain = Domain{UseTokenFor: []string{u.Host}, BasicAuth: []string{"user:pass"}}
+			ok, err := p.validLogo(*u, true)
+			if tc.wantError == "" {
+				if !ok || err != nil {
+					t.Fatalf("expected valid logo, got %v, %v", ok, err)
+				}
+			} else if ok || err == nil || !strings.Contains(err.Error(), tc.wantError) {
+				t.Fatalf("expected %q, got %v, %v", tc.wantError, ok, err)
+			}
+			if tc.status != 0 && strings.Count(err.Error(), "downloading ") != 1 {
+				t.Errorf("expected one downloading prefix: %v", err)
+			}
+			if requests != 1 {
+				t.Errorf("expected one request, got %d", requests)
+			}
+			entries, err := os.ReadDir(tmp)
+			if err != nil || len(entries) != 0 {
+				t.Errorf("temporary directory is not empty: %v, %v", entries, err)
+			}
+		})
+	}
+}
+
+func TestValidLogoLocalPNG(t *testing.T) {
+	p, err := NewParser(ParserConfig{DisableNetwork: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	filename := filepath.Join(t.TempDir(), "logo.png")
+	var body bytes.Buffer
+	if err := png.Encode(&body, image.NewRGBA(image.Rect(0, 0, 1, 1))); err != nil {
+		t.Fatal(err)
+	}
+	for _, content := range [][]byte{body.Bytes(), []byte("invalid PNG")} {
+		if err := os.WriteFile(filename, content, 0o600); err != nil {
+			t.Fatal(err)
+		}
+		ok, err := p.validLogo(url.URL{Scheme: "file", Path: filename}, false)
+		wantValid := bytes.Equal(content, body.Bytes())
+		if ok != wantValid || (err == nil) != wantValid {
+			t.Errorf("expected valid=%v, got %v, %v", wantValid, ok, err)
+		}
 	}
 }

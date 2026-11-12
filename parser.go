@@ -47,6 +47,8 @@ func init() {
 	_ = publiccodeValidator.RegisterLocalErrorMessages(sharedValidate, sharedTrans)
 }
 
+var errHTTPStatus = errors.New("unexpected HTTP status")
+
 var reMapKey = regexp.MustCompile(`\[([[:alpha:]]+)\]`)
 
 type ParserConfig struct {
@@ -187,9 +189,17 @@ func (p *Parser) Parse(uri string) (PublicCode, error) {
 			return nil, fmt.Errorf("can't build GET request for '%s': %w", uri, err)
 		}
 
-		resp, err := p.client.Do(req) //nolint:bodyclose,lll // bodyclose: closed via defer stream.Close() below; bodyclose won't realize it :(
+		resp, err := p.client.Do(req)
 		if err != nil {
 			return nil, fmt.Errorf("can't GET '%s': %w", uri, err)
+		}
+
+		// A server answering 404 or 500 can send a body that is valid YAML,
+		// and decoding it would validate a document that was never fetched.
+		if resp.StatusCode < 200 || resp.StatusCode > 299 {
+			_ = resp.Body.Close()
+
+			return nil, fmt.Errorf("can't GET '%s': %w %s", uri, errHTTPStatus, resp.Status)
 		}
 
 		stream = resp.Body

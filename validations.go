@@ -140,7 +140,7 @@ func (p *Parser) fileExists(u url.URL, network bool) (bool, error) {
 	// If we have an absolute local path, perform validation on it, otherwise do it
 	// on the remote URL if any. If none are available, validation is skipped.
 	if u.Scheme == "file" {
-		_, err := os.Stat(u.Path) //nolint:gosec // G703: path is from a validated file:// URL
+		_, err := os.Stat(u.Path)
 		if err != nil {
 			err = fmt.Errorf("no such file: %s", netutil.DisplayURL(&u)) //nolint:err113 // dynamic message with path context
 		}

@@ -20,7 +20,7 @@ func (u *URL) UnmarshalYAML(unmarshal func(any) error) error {
 		return fmt.Errorf("parsing URL %q: %w", s, err)
 	}
 
-	*u = (URL)(*urlp)
+	*u = URL(*urlp)
 
 	return nil
 }

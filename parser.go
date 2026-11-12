@@ -213,8 +213,7 @@ func (p *Parser) Parse(uri string) (PublicCode, error) {
 func (p *Parser) parseStream(in io.Reader, fileURL *url.URL) (PublicCode, error) {
 	publiccode, err := p.parseAndValidate(in, fileURL)
 
-	var results ValidationResults
-	if errors.As(err, &results) {
+	if results, ok := errors.AsType[ValidationResults](err); ok {
 		setFileName(results, fileNameFromURL(fileURL))
 	}
 
@@ -284,8 +283,7 @@ func (p *Parser) parseAndValidate(in io.Reader, fileURL *url.URL) (PublicCode, e
 	// detect structural issues (multi-document, empty file, syntax errors).
 	file, err := parser.ParseBytes(b, 0)
 	if err != nil {
-		var se *yaml.SyntaxError
-		if errors.As(err, &se) {
+		if se, ok := errors.AsType[*yaml.SyntaxError](err); ok {
 			line := 0
 			if tok := se.GetToken(); tok != nil {
 				line = tok.Position.Line
@@ -401,8 +399,7 @@ func (p *Parser) parseAndValidate(in io.Reader, fileURL *url.URL) (PublicCode, e
 
 	err = sharedValidate.Struct(publiccode)
 	if err != nil {
-		var validationErrs validator.ValidationErrors
-		if errors.As(err, &validationErrs) {
+		if validationErrs, ok := errors.AsType[validator.ValidationErrors](err); ok {
 			for _, err := range validationErrs {
 				key := strings.SplitN(err.Namespace(), ".", 2)[1]
 				key = reMapKey.ReplaceAllString(key, ".$1")
@@ -472,8 +469,7 @@ func (p *Parser) parseAndValidate(in io.Reader, fileURL *url.URL) (PublicCode, e
 	}
 
 	if err = validateFields(publiccode, p, !p.disableNetwork, currentBaseURL); err != nil {
-		var vr ValidationResults
-		if errors.As(err, &vr) {
+		if vr, ok := errors.AsType[ValidationResults](err); ok {
 			for _, result := range vr {
 				var valErr ValidationError
 

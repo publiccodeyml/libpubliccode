@@ -143,10 +143,14 @@ func TestRunNoArgumentPrintsUsageOnStderr(t *testing.T) {
 }
 
 func TestRunHelpPrintsUsageOnStdout(t *testing.T) {
-	_, stdout, stderr := runCLI(t, "-help")
+	_, stdout, stderr := runCLI(t, "--help")
 
 	if !strings.HasPrefix(stdout, "Usage: publiccode-parser") {
 		t.Errorf("expected the usage on stdout, got %q", stdout)
+	}
+
+	if !strings.Contains(stdout, "  -path dir\n") {
+		t.Errorf("expected the path value to be named dir, got %q", stdout)
 	}
 
 	if stderr != "" {

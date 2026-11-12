@@ -51,8 +51,8 @@ func run(args []string, stdout, stderr io.Writer) int {
 	}
 	localBasePathPtr := flags.String(
 		"path", "",
-		"Use this local directory as base path when checking for files existence "+
-			"instead of using the `url` key in publiccode.yml",
+		"Use this local `dir` as base path when checking for files existence "+
+			"instead of using the url key in publiccode.yml",
 	)
 	disableNetworkPtr := flags.Bool(
 		"no-network", false,

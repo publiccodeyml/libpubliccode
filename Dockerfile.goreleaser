@@ -4,7 +4,8 @@
 #
 FROM alpine:3.24@sha256:be2656061b536c1883c4034790e21d0a09c5aaaf51968b89368a3c0371ea2c9a
 
-COPY publiccode-parser /usr/local/bin/publiccode-parser
+ARG TARGETPLATFORM
+COPY ${TARGETPLATFORM}/publiccode-parser /usr/local/bin/publiccode-parser
 
 # git and openssh-client are needed by CircleCI when using
 # publiccode-parser-orb, which uses this image.

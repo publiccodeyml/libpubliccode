@@ -32,7 +32,7 @@ func New() *validator.Validate {
 	validate.RegisterAlias("date", "datetime=2006-01-02")
 
 	validate.RegisterTagNameFunc(func(fld reflect.StructField) string {
-		name := strings.SplitN(fld.Tag.Get("yaml"), ",", 2)[0]
+		name, _, _ := strings.Cut(fld.Tag.Get("yaml"), ",")
 		if name == "-" {
 			return ""
 		}

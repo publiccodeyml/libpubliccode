@@ -55,7 +55,7 @@ func uMin(fl validator.FieldLevel) bool {
 func isHTTPURL(fl validator.FieldLevel) bool {
 	validate := sharedValidator
 
-	if stringer, ok := fl.Field().Interface().(fmt.Stringer); ok {
+	if stringer, ok := reflect.TypeAssert[fmt.Stringer](fl.Field()); ok {
 		err := validate.Var(stringer.String(), "http_url")
 
 		return err == nil
@@ -70,7 +70,7 @@ func isHTTPURL(fl validator.FieldLevel) bool {
 func isURL(fl validator.FieldLevel) bool {
 	validate := sharedValidator
 
-	if stringer, ok := fl.Field().Interface().(fmt.Stringer); ok {
+	if stringer, ok := reflect.TypeAssert[fmt.Stringer](fl.Field()); ok {
 		err := validate.Var(stringer.String(), "url")
 
 		return err == nil

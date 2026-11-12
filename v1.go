@@ -48,18 +48,18 @@ type PublicCodeV1 struct {
 	Legal struct {
 		License            string  `json:"license"                      validate:"required,is_spdx_expression" yaml:"license"`
 		MainCopyrightOwner *string `json:"mainCopyrightOwner,omitempty" yaml:"mainCopyrightOwner,omitempty"`
-	} `yaml:"legal" json:"legal"`
+	} `json:"legal" yaml:"legal"`
 
 	Maintenance struct {
 		Type        string          `json:"type"                  validate:"required,oneof=internal contract community none"                        yaml:"type"`
 		Contractors *[]ContractorV1 `json:"contractors,omitempty" validate:"required_if=Type contract,excluded_unless=Type contract,omitempty,dive" yaml:"contractors,omitempty"`
 		Contacts    *[]ContactV1    `json:"contacts,omitempty"    validate:"required_if=Type community,required_if=Type internal,omitempty,dive"    yaml:"contacts,omitempty"`
-	} `yaml:"maintenance" json:"maintenance"`
+	} `json:"maintenance" yaml:"maintenance"`
 
 	Localisation struct {
 		LocalisationReady  *bool    `json:"localisationReady"  validate:"required"                                     yaml:"localisationReady"`
 		AvailableLanguages []string `json:"availableLanguages" validate:"required,gt=0,dive,bcp47_strict_language_tag" yaml:"availableLanguages"`
-	} `yaml:"localisation" json:"localisation"`
+	} `json:"localisation" yaml:"localisation"`
 
 	DependsOn *struct {
 		Open        *[]DependencyV1 `json:"open,omitempty"        validate:"omitempty,dive" yaml:"open,omitempty"`

@@ -27,12 +27,14 @@ linters:
     - godox
     # Not terribly useful and ends up in too much boilerplate
     - exhaustruct
+    - exhaustruct_v5
     # https://github.com/italia/developers-italia-api/issues/190)
     # Don't feel about chasing this one down
     - musttag
     # Meh
     - noinlineerr
     # Deprecated
+    - gomodguard
     - wsl
 
     # More false positive than actual issues

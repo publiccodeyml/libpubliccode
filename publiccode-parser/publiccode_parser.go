@@ -159,11 +159,9 @@ func hasValidationErrors(results error) bool {
 		return false
 	}
 
-	var vr publiccode.ValidationResults
-	if errors.As(results, &vr) {
+	if vr, ok := errors.AsType[publiccode.ValidationResults](results); ok {
 		for _, res := range vr {
-			var ve publiccode.ValidationError
-			if errors.As(res, &ve) {
+			if _, ok := errors.AsType[publiccode.ValidationError](res); ok {
 				return true
 			}
 		}

@@ -56,18 +56,18 @@ type PublicCodeV0 struct {
 		MainCopyrightOwner *string `json:"mainCopyrightOwner,omitempty" yaml:"mainCopyrightOwner,omitempty"`
 		RepoOwner          *string `json:"repoOwner,omitempty"          yaml:"repoOwner,omitempty"`
 		AuthorsFile        *string `json:"authorsFile,omitempty"        yaml:"authorsFile,omitempty"`
-	} `yaml:"legal" json:"legal"`
+	} `json:"legal" yaml:"legal"`
 
 	Maintenance struct {
 		Type        string          `json:"type"                  validate:"required,oneof=internal contract community none"                        yaml:"type"`
 		Contractors *[]ContractorV0 `json:"contractors,omitempty" validate:"required_if=Type contract,excluded_unless=Type contract,omitempty,dive" yaml:"contractors,omitempty"`
 		Contacts    *[]ContactV0    `json:"contacts,omitempty"    validate:"required_if=Type community,required_if=Type internal,omitempty,dive"    yaml:"contacts,omitempty"`
-	} `yaml:"maintenance" json:"maintenance"`
+	} `json:"maintenance" yaml:"maintenance"`
 
 	Localisation struct {
 		LocalisationReady  *bool    `json:"localisationReady"  validate:"required"                                     yaml:"localisationReady"`
 		AvailableLanguages []string `json:"availableLanguages" validate:"required,gt=0,dive,bcp47_strict_language_tag" yaml:"availableLanguages"`
-	} `yaml:"localisation" json:"localisation"`
+	} `json:"localisation" yaml:"localisation"`
 
 	DependsOn *struct {
 		Open        *[]DependencyV0 `json:"open,omitempty"        validate:"omitempty,dive" yaml:"open,omitempty"`
@@ -151,7 +151,7 @@ type ITSectionV0 struct {
 
 	Riuso struct {
 		CodiceIPA string `json:"codiceIPA,omitempty" validate:"omitempty,is_italian_ipa_code" yaml:"codiceIPA,omitempty"`
-	} `yaml:"riuso,omitempty" json:"riuso,omitzero"`
+	} `json:"riuso,omitzero" yaml:"riuso,omitempty"`
 
 	Piattaforme struct {
 		SPID   bool `json:"spid"   yaml:"spid"`
@@ -159,7 +159,7 @@ type ITSectionV0 struct {
 		CIE    bool `json:"cie"    yaml:"cie"`
 		ANPR   bool `json:"anpr"   yaml:"anpr"`
 		Io     bool `json:"io"     yaml:"io"`
-	} `yaml:"piattaforme" json:"piattaforme"`
+	} `json:"piattaforme" yaml:"piattaforme"`
 }
 
 func (p PublicCodeV0) Version() uint {

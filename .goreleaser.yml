@@ -56,40 +56,40 @@ changelog:
       - '^chore'
       - '^test'
       - '^Merge'
-dockers:
-  -
-    use: buildx
-    goos: linux
-    goarch: amd64
-    ids:
-      - publiccode-parser
+dockers_v2:
+  - id: publiccode-parser
+    ids: [publiccode-parser]
     dockerfile: Dockerfile.goreleaser
-    image_templates:
-      - "publiccodeyml/libpubliccode:{{ .Tag }}-amd64"
-    build_flag_templates:
-      - "--pull"
-      - "--platform=linux/amd64"
-      - "--label=org.opencontainers.image.source=https://github.com/publiccodeyml/libpubliccode"
-  -
-    use: buildx
-    goos: linux
-    goarch: arm64
-    ids:
-      - publiccode-parser
-    dockerfile: Dockerfile.goreleaser
-    image_templates:
-      - "publiccodeyml/libpubliccode:{{ .Tag }}-arm64"
-    build_flag_templates:
-      - "--pull"
-      - "--platform=linux/arm64"
-      - "--label=org.opencontainers.image.source=https://github.com/publiccodeyml/libpubliccode"
+    images: [publiccodeyml/libpubliccode]
+    tags:
+      - "{{ .Tag }}"
+      - latest
+    platforms:
+      - linux/amd64
+      - linux/arm64
+    flags: ["--pull"]
+    labels:
+      org.opencontainers.image.source: https://github.com/publiccodeyml/libpubliccode
 
-docker_manifests:
-  - name_template: "publiccodeyml/libpubliccode:latest"
-    image_templates:
-      - "publiccodeyml/libpubliccode:{{ .Tag }}-amd64"
-      - "publiccodeyml/libpubliccode:{{ .Tag }}-arm64"
-  - name_template: "publiccodeyml/libpubliccode:{{ .Tag }}"
-    image_templates:
-      - "publiccodeyml/libpubliccode:{{ .Tag }}-amd64"
-      - "publiccodeyml/libpubliccode:{{ .Tag }}-arm64"
+  # Keep the architecture tags used by existing consumers.
+  # Snapshots already add architecture suffixes to the tags above.
+  - id: publiccode-parser-amd64
+    ids: [publiccode-parser]
+    dockerfile: Dockerfile.goreleaser
+    images: [publiccodeyml/libpubliccode]
+    tags: ["{{ .Tag }}-amd64"]
+    platforms: [linux/amd64]
+    disable: "{{ .IsSnapshot }}"
+    flags: ["--pull"]
+    labels:
+      org.opencontainers.image.source: https://github.com/publiccodeyml/libpubliccode
+  - id: publiccode-parser-arm64
+    ids: [publiccode-parser]
+    dockerfile: Dockerfile.goreleaser
+    images: [publiccodeyml/libpubliccode]
+    tags: ["{{ .Tag }}-arm64"]
+    platforms: [linux/arm64]
+    disable: "{{ .IsSnapshot }}"
+    flags: ["--pull"]
+    labels:
+      org.opencontainers.image.source: https://github.com/publiccodeyml/libpubliccode

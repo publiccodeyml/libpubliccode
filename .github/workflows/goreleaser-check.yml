@@ -41,3 +41,11 @@ jobs:
         with:
           version: v2.15.2
           args: release --snapshot --clean
+
+      - name: Check snapshot images
+        run: |
+          for arch in amd64 arm64; do
+            image="publiccodeyml/libpubliccode:latest-${arch}"
+            test "$(docker image inspect --format '{{.Architecture}}' "$image")" = "$arch"
+            docker run --rm --platform "linux/${arch}" "$image" --help
+          done

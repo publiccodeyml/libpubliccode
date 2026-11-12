@@ -1,32 +1,42 @@
 # Add new testcase files to this directory
 
-**tl;dr**:
-
-* `v0.1/valid/name.yml`: A valid v0.2 publiccode.yml testing the `name` key.
-* `v0.1/invalid/name_missing.yml`: An invalid v0.1 publiccode.yml where the mandatory
-  `name` key is missing.
-* `v0.2/invalid/latin1_encoded.yml`: An invalid v0.2 publiccode.yml with the wrong
-  encoding.
-
-Rules are not enforced but help keeping things tidy.
-
 ## Path
 
-Put files in `VERSION/valid/` for valid YAML files for that version and
-`VERSION/invalid/` for invalid YAML files.
+Fixtures are grouped by the major version of the core standard: `v0/` and
+`v1/`, not by minor version (such as `v0.2/`). Paths below are relative to
+this directory.
 
-Where `VERSION` is the version of the core standard prefixed by `v`.
+The tests in [`v0_test.go`](../v0_test.go) read these directories:
 
-**Examples**
+* `v0/valid/`: Valid publiccode.yml files without warnings.
+* `v0/valid_with_warnings/`: Valid files with expected warnings.
+* `v0/invalid/`: Files with expected validation errors.
 
-* `v0.2/valid/`
-* `v0.2/invalid/`
-* `v0.1/invalid/`
+Each directory also has a `no-network/` subdirectory. Put cases that test
+parsing with `ParserConfig.DisableNetwork` enabled there.
 
-## File contents
+The tests in [`v1_test.go`](../v1_test.go) read `v1/invalid/`,
+`v1/invalid_valid_in_v0/` and `v1/invalid_valid_with_warnings_in_v0/`.
+They currently expect the same unsupported version error for every file.
+They do not validate v1 fields. `v1/valid/` is not read by these tests.
 
-Start from `valid.minimal.yml` and edit it to contain the subject of
-your test.
+The globs only read YAML files directly inside each listed directory.
+The v0 `no-network/` directories have separate tests. The v1 tests do not
+read their `no-network/` subdirectories.
+
+## File contents and expected results
+
+Start from [`v0/valid/valid.minimal.yml`](v0/valid/valid.minimal.yml) and
+edit it to contain the subject of your test. Keep `publiccodeYmlVersion`
+consistent with the version you want to test.
+
+For every new file in `v0/invalid/` or `v0/valid_with_warnings/`, add an
+entry keyed by its filename to the `expected` map in the corresponding
+test in `v0_test.go`. The same applies to their `no-network/` subdirectories:
+use the corresponding `_NoNetwork` test. Record the expected diagnostics,
+including their line and column numbers. Without an entry, the test fails
+with "No expected data for file". Valid files without warnings are discovered
+automatically and need no map entry.
 
 Add comments only to the section / key being tested to draw attention
 to it and, if the testcase needs more context, add it as a comment at

@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 	"runtime/debug"
+	"strings"
 
 	publiccode "github.com/publiccodeyml/libpubliccode/v5"
 )
@@ -94,6 +95,15 @@ func run(args []string, stdout, stderr io.Writer) int {
 	}
 
 	if flags.NArg() < 1 {
+		flags.Usage()
+
+		return 2
+	}
+
+	// The flag package stops parsing at the first file name, so a flag written
+	// after it lands here too and would otherwise be ignored without notice.
+	if flags.NArg() > 1 {
+		fmt.Fprintf(stderr, "unexpected arguments after %s: %s\n", flags.Arg(0), strings.Join(flags.Args()[1:], " "))
 		flags.Usage()
 
 		return 2

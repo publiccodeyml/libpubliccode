@@ -19,7 +19,6 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/alranel/go-vcsurl/v2"
 	"github.com/publiccodeyml/libpubliccode/v5/data"
 	netutil "github.com/publiccodeyml/libpubliccode/v5/internal"
 )
@@ -106,7 +105,7 @@ func (p *Parser) isReachable(u url.URL) (bool, error) {
 //
 // It supports relative paths and turns them into remote URLs or file:// URLs
 // depending on the value of baseURL.
-func toAbsoluteURL(file string, baseURL *url.URL, network bool) *url.URL {
+func (p *Parser) toAbsoluteURL(file string, baseURL *url.URL, network bool) *url.URL {
 	// Check if file is an absolute URL
 	if uri, err := url.ParseRequestURI(file); err == nil {
 		if !network {
@@ -114,7 +113,7 @@ func toAbsoluteURL(file string, baseURL *url.URL, network bool) *url.URL {
 		}
 
 		// this uses the network to detect the git branch
-		if raw := vcsurl.GetRawFile(uri); raw != nil {
+		if raw := p.getRawFile(uri); raw != nil {
 			return raw
 		}
 

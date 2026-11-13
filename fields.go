@@ -6,7 +6,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/alranel/go-vcsurl/v2"
 	urlutil "github.com/publiccodeyml/libpubliccode/v5/internal"
 )
 
@@ -33,7 +32,7 @@ func validateFieldsV0(publiccode PublicCode, parser *Parser, network bool, baseU
 			vr = append(vr, newValidationErrorf("url", "'%s' not reachable: %s", publiccodev0.URL, err.Error()))
 		}
 
-		if !vcsurl.IsRepo((*url.URL)(publiccodev0.URL)) {
+		if !parser.isRepo((*url.URL)(publiccodev0.URL)) {
 			vr = append(vr, newValidationError("url", "is not a valid code repository"))
 		}
 	}
@@ -60,7 +59,7 @@ func validateFieldsV0(publiccode PublicCode, parser *Parser, network bool, baseU
 		if _, err := isRelativePathOrURL(*publiccodev0.Logo, "logo"); err != nil {
 			vr = append(vr, err)
 		} else if !parser.disableExternalChecks {
-			u := toAbsoluteURL(*publiccodev0.Logo, baseURL, network)
+			u := parser.toAbsoluteURL(*publiccodev0.Logo, baseURL, network)
 			if u != nil {
 				validLogo, err := parser.validLogo(*u, network)
 				if !validLogo {
@@ -79,7 +78,7 @@ func validateFieldsV0(publiccode PublicCode, parser *Parser, network bool, baseU
 		if _, err := isRelativePathOrURL(*publiccodev0.MonochromeLogo, "monochromeLogo"); err != nil {
 			vr = append(vr, err)
 		} else if !parser.disableExternalChecks {
-			u := toAbsoluteURL(*publiccodev0.MonochromeLogo, baseURL, network)
+			u := parser.toAbsoluteURL(*publiccodev0.MonochromeLogo, baseURL, network)
 			if u != nil {
 				validLogo, err := parser.validLogo(*u, network)
 				if !validLogo {
@@ -157,7 +156,7 @@ func validateFieldsV0(publiccode PublicCode, parser *Parser, network bool, baseU
 		if _, err := isRelativePathOrURL(*publiccodev0.Legal.AuthorsFile, "legal.authorsFile"); err != nil {
 			vr = append(vr, err)
 		} else if !parser.disableExternalChecks {
-			u := toAbsoluteURL(*publiccodev0.Legal.AuthorsFile, baseURL, network)
+			u := parser.toAbsoluteURL(*publiccodev0.Legal.AuthorsFile, baseURL, network)
 			if u != nil {
 				exists, err := parser.fileExists(*u, network)
 				if !exists {
@@ -235,7 +234,7 @@ func validateFieldsV0(publiccode PublicCode, parser *Parser, network bool, baseU
 			if _, err := isRelativePathOrURL(v, keyName); err != nil {
 				vr = append(vr, err)
 			} else if !parser.disableExternalChecks {
-				u := toAbsoluteURL(v, baseURL, network)
+				u := parser.toAbsoluteURL(v, baseURL, network)
 				if u != nil {
 					isImage, err := parser.isImageFile(*u, network)
 					if !isImage {
@@ -333,7 +332,7 @@ func validateFieldsV1(publiccode PublicCode, parser *Parser, network bool, baseU
 			vr = append(vr, newValidationErrorf("url", "'%s' not reachable: %s", publiccodev1.URL, err.Error()))
 		}
 
-		if !vcsurl.IsRepo((*url.URL)(publiccodev1.URL)) {
+		if !parser.isRepo((*url.URL)(publiccodev1.URL)) {
 			vr = append(vr, newValidationError("url", "is not a valid code repository"))
 		}
 	}
@@ -360,7 +359,7 @@ func validateFieldsV1(publiccode PublicCode, parser *Parser, network bool, baseU
 		if _, err := isRelativePathOrURL(*publiccodev1.Logo, "logo"); err != nil {
 			vr = append(vr, err)
 		} else if !parser.disableExternalChecks {
-			u := toAbsoluteURL(*publiccodev1.Logo, baseURL, network)
+			u := parser.toAbsoluteURL(*publiccodev1.Logo, baseURL, network)
 			if u != nil {
 				validLogo, err := parser.validLogo(*u, network)
 				if !validLogo {
@@ -421,7 +420,7 @@ func validateFieldsV1(publiccode PublicCode, parser *Parser, network bool, baseU
 			if _, err := isRelativePathOrURL(v, keyName); err != nil {
 				vr = append(vr, err)
 			} else if !parser.disableExternalChecks {
-				u := toAbsoluteURL(v, baseURL, network)
+				u := parser.toAbsoluteURL(v, baseURL, network)
 				if u != nil {
 					isImage, err := parser.isImageFile(*u, network)
 					if !isImage {

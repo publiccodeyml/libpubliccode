@@ -149,9 +149,14 @@ func TestValidateFieldsV1WithScreenshotRelative(t *testing.T) {
 }
 
 func TestValidateFieldsV1WithNetworkChecks(t *testing.T) {
-	// Use a test server that returns 200 so we can exercise the IsRepo check path,
-	// but the URL is not a code repository.
+	// go-vcsurl checks for a git repository by requesting <url>/info/refs.
+	// Answer 404 there, so the URL is not a repository, and 200 everywhere
+	// else, so the URL is still reachable.
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasSuffix(r.URL.Path, "/info/refs") {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
 		w.WriteHeader(http.StatusOK)
 	}))
 	defer srv.Close()
@@ -190,8 +195,8 @@ func TestValidateFieldsV1WithNetworkChecks(t *testing.T) {
 	// network=true, checksNetwork=true
 	err := validateFieldsV1(v1, p, true, base)
 	// We expect the "not a valid code repository" error.
-	if err == nil {
-		t.Log("no error (URL might have been checked differently)")
+	if err == nil || !strings.Contains(err.Error(), "is not a valid code repository") {
+		t.Fatalf("expected invalid repository error, got %v", err)
 	}
 }
 
@@ -265,7 +270,7 @@ func TestValidateFieldsV1WithCountriesDeprecated(t *testing.T) {
 	p, _ := NewParser(ParserConfig{DisableNetwork: true, DisableExternalChecks: true})
 	base := &url.URL{Scheme: "file", Path: "/tmp"}
 
-	countries := []string{"it"} // lowercase - deprecated
+	countries := []string{"it"}   // lowercase - deprecated
 	unsupported := []string{"de"} // lowercase - deprecated
 	locReady := true
 	v1 := &PublicCodeV1{

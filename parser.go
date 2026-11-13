@@ -17,7 +17,6 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/alranel/go-vcsurl/v2"
 	"github.com/go-playground/locales/en"
 	ut "github.com/go-playground/universal-translator"
 	"github.com/go-playground/validator/v10"
@@ -143,7 +142,6 @@ func NewParser(config ParserConfig) (*Parser, error) {
 		config.AllowNetworkToPrivateHosts,
 		urlutil.WithUserAgent(config.UserAgent),
 	)
-	vcsurl.Client = httpClient
 	p := Parser{
 		disableNetwork:        config.DisableNetwork,
 		disableExternalChecks: config.DisableExternalChecks,
@@ -445,7 +443,7 @@ func (p *Parser) parseAndValidate(in io.Reader, fileURL *url.URL) (PublicCode, e
 
 	// Still no base URL: we parsed from a stream, try to use the publiccode.yml's `url` field
 	if currentBaseURL == nil && !p.disableNetwork && publiccode.Url() != nil {
-		rawRoot, err := vcsurl.GetRawRoot((*url.URL)(publiccode.Url()), p.branch)
+		rawRoot, err := p.getRawRoot((*url.URL)(publiccode.Url()))
 		if err != nil {
 			line, column := getPositionInFile("url", file)
 

@@ -182,3 +182,24 @@ localisation:
 		t.Error("expected at least one deprecation warning for old version")
 	}
 }
+
+func TestDecodeTaggedMappingAsList(t *testing.T) {
+	for _, field := range []string{"platforms", "usedBy", "isBasedOn"} {
+		t.Run(field, func(t *testing.T) {
+			input := "publiccodeYmlVersion: \"0\"\n" + field + ": !custom {key: value}\n"
+			file, err := parser.ParseBytes([]byte(input), 0)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			var document PublicCodeV0
+			results := decode([]byte(input), &document, file)
+			if len(results) != 1 {
+				t.Fatalf("expected one decoding error, got %v", results)
+			}
+			if _, ok := results[0].(ValidationError); !ok {
+				t.Fatalf("expected ValidationError, got %T", results[0])
+			}
+		})
+	}
+}

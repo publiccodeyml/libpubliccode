@@ -1,8 +1,11 @@
 package publiccode
 
 import (
+	"cmp"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"slices"
 	"strings"
 )
 
@@ -109,4 +112,28 @@ func (vr ValidationResults) Error() string {
 	}
 
 	return strings.Join(s, "\n")
+}
+
+// sortByPosition orders diagnostics as they appear in the file. Some checks
+// walk maps such as description, whose iteration order changes from one run
+// to the next. Diagnostics on the same position keep their relative order.
+func sortByPosition(vr ValidationResults) {
+	slices.SortStableFunc(vr, func(a, b error) int {
+		aLine, aColumn := position(a)
+		bLine, bColumn := position(b)
+
+		return cmp.Or(cmp.Compare(aLine, bLine), cmp.Compare(aColumn, bColumn))
+	})
+}
+
+func position(err error) (int, int) {
+	if valErr, ok := errors.AsType[ValidationError](err); ok {
+		return valErr.Line, valErr.Column
+	}
+
+	if valWarn, ok := errors.AsType[ValidationWarning](err); ok {
+		return valWarn.Line, valWarn.Column
+	}
+
+	return 0, 0
 }

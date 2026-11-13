@@ -403,19 +403,24 @@ func (p *Parser) parseAndValidate(in io.Reader, fileURL *url.URL) (PublicCode, e
 	err = sharedValidate.Struct(publiccode)
 	if err != nil {
 		if validationErrs, ok := errors.AsType[validator.ValidationErrors](err); ok {
+			structResults := make(ValidationResults, 0, len(validationErrs))
+
 			for _, err := range validationErrs {
 				key := strings.SplitN(err.Namespace(), ".", 2)[1]
 				key = reMapKey.ReplaceAllString(key, ".$1")
 
 				line, column := getPositionInFile(key, file)
 
-				ve = append(ve, ValidationError{
+				structResults = append(structResults, ValidationError{
 					Key:         key,
 					Description: err.Translate(sharedTrans),
 					Line:        line,
 					Column:      column,
 				})
 			}
+
+			sortByPosition(structResults)
+			ve = append(ve, structResults...)
 		}
 	}
 
@@ -473,6 +478,8 @@ func (p *Parser) parseAndValidate(in io.Reader, fileURL *url.URL) (PublicCode, e
 
 	if err = validateFields(publiccode, p, !p.disableNetwork, currentBaseURL); err != nil {
 		if vr, ok := errors.AsType[ValidationResults](err); ok {
+			fieldResults := make(ValidationResults, 0, len(vr))
+
 			for _, result := range vr {
 				var valErr ValidationError
 
@@ -481,12 +488,15 @@ func (p *Parser) parseAndValidate(in io.Reader, fileURL *url.URL) (PublicCode, e
 				switch {
 				case errors.As(result, &valErr):
 					valErr.Line, valErr.Column = getPositionInFile(valErr.Key, file)
-					ve = append(ve, valErr)
+					fieldResults = append(fieldResults, valErr)
 				case errors.As(result, &valWarn):
 					valWarn.Line, valWarn.Column = getPositionInFile(valWarn.Key, file)
-					ve = append(ve, valWarn)
+					fieldResults = append(fieldResults, valWarn)
 				}
 			}
+
+			sortByPosition(fieldResults)
+			ve = append(ve, fieldResults...)
 		}
 	}
 

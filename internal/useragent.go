@@ -59,7 +59,7 @@ func buildUserAgent(info *debug.BuildInfo) string {
 
 // moduleVersion digs the version of this module out of info. It answers an empty
 // string when info records none, which is the case for a binary built from a
-// list of files (as the released CLI is) and when info itself is nil.
+// list of files (e.g. "go build main.go") and when info itself is nil.
 func moduleVersion(info *debug.BuildInfo) string {
 	if info == nil {
 		return ""

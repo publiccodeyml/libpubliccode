@@ -53,7 +53,7 @@ func TestBuildUserAgent(t *testing.T) {
 			want: "libpubliccode/5.4.3 (+https://github.com/publiccodeyml/libpubliccode)",
 		},
 		{
-			name: "release build of the CLI: no module version in the build information",
+			name: "go build main.go: no module version in the build information",
 			info: &debug.BuildInfo{Main: debug.Module{Path: "command-line-arguments"}},
 			want: "libpubliccode/devel (+https://github.com/publiccodeyml/libpubliccode)",
 		},

@@ -209,3 +209,28 @@ func TestHasValidationErrorsMixedResults(t *testing.T) {
 		t.Error("expected true for mixed results containing an error")
 	}
 }
+
+func TestRunWarningsAsErrors(t *testing.T) {
+	for _, file := range []string{validFile, warningFile, invalidFile, notThereFile} {
+		for _, jsonFlag := range []bool{false, true} {
+			args := []string{"-no-external-checks"}
+			if jsonFlag {
+				args = append(args, "-json")
+			}
+			args = append(args, file)
+			code, stdout, stderr := runCLI(t, args...)
+			strictArgs := append([]string{"-warnings-as-errors"}, args...)
+			strictCode, strictStdout, strictStderr := runCLI(t, strictArgs...)
+			want := code
+			if file == warningFile {
+				want = 1
+			}
+			if strictCode != want {
+				t.Errorf("%v: expected exit code %d, got %d", strictArgs, want, strictCode)
+			}
+			if strictStdout != stdout || strictStderr != stderr {
+				t.Errorf("%v: -warnings-as-errors changed diagnostics", strictArgs)
+			}
+		}
+	}
+}

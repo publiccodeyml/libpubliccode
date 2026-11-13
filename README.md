@@ -61,7 +61,9 @@ Run `publiccode-parser --help` for the available command line flags.
 
 The tool returns 0 in case of successful validation, 1 when the file has
 validation errors or can't be read and 2 when it's invoked with no file
-argument or an unknown flag.
+argument or an unknown flag. Warnings return 0 by default. Use
+`--warnings-as-errors` to return 1 on validation warnings too, including
+with `--json`.
 
 With `--json` the same exit codes apply and the output is always a
 JSON list, empty when there is nothing to report.

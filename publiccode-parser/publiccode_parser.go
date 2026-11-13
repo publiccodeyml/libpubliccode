@@ -68,6 +68,10 @@ func run(args []string, stdout, stderr io.Writer) int {
 		"Timeout for each HTTP request during external checks (e.g. 10s, 1m). "+
 			"Defaults to 30s if not set. No effect with --no-network or --no-external-checks.",
 	)
+	warningsAsErrorsPtr := flags.Bool(
+		"warnings-as-errors", false,
+		"Exit with status 1 on validation warnings as well as errors.",
+	)
 	jsonOutputPtr := flags.Bool("json", false, "Output the validation errors as a JSON list.")
 	helpPtr := flags.Bool("help", false, "Display command line usage.")
 	versionPtr := flags.Bool("version", false, "Display current software version.")
@@ -110,14 +114,19 @@ func run(args []string, stdout, stderr io.Writer) int {
 	_, parseErr := p.Parse(flags.Arg(0))
 
 	if *jsonOutputPtr {
-		return reportJSON(parseErr, stdout, stderr)
+		code := reportJSON(parseErr, stdout, stderr)
+		if code == 0 && *warningsAsErrorsPtr && hasValidationWarnings(parseErr) {
+			return 1
+		}
+
+		return code
 	}
 
 	if parseErr != nil {
 		fmt.Fprintln(stdout, parseErr)
 	}
 
-	if hasValidationErrors(parseErr) {
+	if hasValidationErrors(parseErr) || (*warningsAsErrorsPtr && hasValidationWarnings(parseErr)) {
 		return 1
 	}
 
@@ -170,4 +179,16 @@ func hasValidationErrors(results error) bool {
 	}
 
 	return true
+}
+
+func hasValidationWarnings(results error) bool {
+	if vr, ok := errors.AsType[publiccode.ValidationResults](results); ok {
+		for _, res := range vr {
+			if _, ok := errors.AsType[publiccode.ValidationWarning](res); ok {
+				return true
+			}
+		}
+	}
+
+	return false
 }

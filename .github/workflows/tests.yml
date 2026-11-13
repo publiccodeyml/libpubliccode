@@ -17,16 +17,7 @@ jobs:
       - run: go mod verify
       - run: go test -race -coverprofile=coverage.txt ./...
       - name: Validate publiccode.yml with the CLI
-        # The CLI exits 0 on warnings, so any output fails the step.
-        run: |
-          output="$(go run ./publiccode-parser -no-network publiccode.yml 2>&1)" || {
-            echo "$output"
-            exit 1
-          }
-          if [ -n "$output" ]; then
-            echo "$output"
-            exit 1
-          fi
+        run: go run ./publiccode-parser -no-network -warnings-as-errors publiccode.yml
       - uses: golang/govulncheck-action@032d45514ae346b1db93c04b0c90b841c370344f # v1.1.0
         with:
           repo-checkout: false

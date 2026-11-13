@@ -763,8 +763,17 @@ func findKeyAtLine(node ast.Node, targetLine int, prefix string) string {
 
 // decode decodes the YAML bytes into publiccode and returns any decode errors
 // (type mismatches, unknown fields, syntax errors) as ValidationResults.
-func decode[T any](data []byte, publiccode *T, file *ast.File) ValidationResults {
-	var ve ValidationResults
+//
+//nolint:nonamedreturns // deferred recovery must replace the decoding result
+func decode[T any](data []byte, publiccode *T, file *ast.File) (ve ValidationResults) {
+	// go-yaml can panic on malformed input, including a tagged mapping decoded
+	// into a slice. Keep recovery at the decoder boundary so callers receive a
+	// validation error without hiding panics in our validation code.
+	defer func() {
+		if recovered := recover(); recovered != nil {
+			ve = ValidationResults{newValidationErrorf("", "YAML decoding failed: %v", recovered)}
+		}
+	}()
 
 	d := yaml.NewDecoder(bytes.NewReader(data), yaml.DisallowUnknownField())
 

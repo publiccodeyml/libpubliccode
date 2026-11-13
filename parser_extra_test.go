@@ -191,3 +191,74 @@ func TestParseHTTPServer(t *testing.T) {
 	// Should successfully parse the YAML served over HTTP.
 	_, _ = p.Parse(srv.URL + "/publiccode.yml")
 }
+
+// Checks on description walk a map, so this needs several languages and
+// several parses to catch an order that changes from one run to the next.
+func TestParseStreamDiagnosticsOrderAcrossLanguages(t *testing.T) {
+	const longDescription = `
+      This is a long description for the test software, used to check the
+      order of the diagnostics. It needs to be at least 150 characters long
+      to pass the validation of the parser, so here is some more text.`
+
+	var yaml strings.Builder
+
+	yaml.WriteString(`publiccodeYmlVersion: "0"
+name: Test
+url: "https://github.com/italia/developers.italia.it.git"
+platforms:
+  - web
+developmentStatus: stable
+softwareType: "standalone/web"
+description:
+`)
+
+	for _, lang := range []string{"it", "en", "de"} {
+		yaml.WriteString("  " + lang + ":\n")
+		yaml.WriteString("    longDescription: >" + longDescription + "\n")
+		yaml.WriteString("    features: [a]\n")
+		yaml.WriteString("    screenshots: [/" + lang + ".png]\n")
+	}
+
+	yaml.WriteString(`legal:
+  license: MIT
+maintenance:
+  type: none
+localisation:
+  localisationReady: true
+  availableLanguages:
+    - en
+`)
+
+	p, err := NewParser(ParserConfig{DisableNetwork: true})
+	if err != nil {
+		t.Fatalf("NewParser: %v", err)
+	}
+
+	var first string
+
+	for range 20 {
+		_, err := p.ParseStream(strings.NewReader(yaml.String()))
+		if err == nil {
+			t.Fatal("expected validation errors")
+		}
+
+		if first == "" {
+			first = err.Error()
+
+			continue
+		}
+
+		if err.Error() != first {
+			t.Fatalf("diagnostics order changed between parses:\n%s\n- then:\n%s", first, err.Error())
+		}
+	}
+
+	for _, lang := range []string{"it", "en", "de"} {
+		for _, key := range []string{"shortDescription", "screenshots[0]"} {
+			if !strings.Contains(first, "description."+lang+"."+key) {
+				t.Errorf("missing diagnostic for description.%s.%s in:\n%s", lang, key, first)
+			}
+		}
+	}
+
+}

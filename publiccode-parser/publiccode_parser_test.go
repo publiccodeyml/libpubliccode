@@ -43,6 +43,8 @@ func TestRunExitCodes(t *testing.T) {
 		"no file argument":         {[]string{}, 2},
 		"no file argument, JSON":   {[]string{"-json"}, 2},
 		"unknown flag":             {[]string{"-bogus", validFile}, 2},
+		"two files":                {[]string{"-no-external-checks", validFile, invalidFile}, 2},
+		"flag after the file":      {[]string{"-no-external-checks", validFile, "-json"}, 2},
 		"help":                     {[]string{"-help"}, 0},
 	}
 
@@ -232,5 +234,17 @@ func TestRunWarningsAsErrors(t *testing.T) {
 				t.Errorf("%v: -warnings-as-errors changed diagnostics", strictArgs)
 			}
 		}
+	}
+}
+
+func TestRunExtraArgumentsNamedOnStderr(t *testing.T) {
+	_, stdout, stderr := runCLI(t, "-no-external-checks", validFile, "-json")
+
+	if stdout != "" {
+		t.Errorf("expected no output on stdout, got %q", stdout)
+	}
+
+	if !strings.HasPrefix(stderr, "unexpected arguments after "+validFile+": -json\n") {
+		t.Errorf("expected the extra arguments on stderr, got %q", stderr)
 	}
 }

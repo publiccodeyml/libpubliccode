@@ -50,6 +50,7 @@ var errHTTPStatus = errors.New("unexpected HTTP status")
 
 var reMapKey = regexp.MustCompile(`\[([[:alpha:]]+)\]`)
 
+// ParserConfig configures parsing and validation of publiccode.yml files.
 type ParserConfig struct {
 	// DisableNetwork disables all network tests (eg. URL existence). This
 	// results in much faster parsing.
@@ -171,6 +172,13 @@ func (p *Parser) ParseStream(in io.Reader) (PublicCode, error) {
 	return p.parseStream(in, nil)
 }
 
+// Parse reads and validates a publiccode.yml file from a local path or an HTTP(S) URL.
+// Local paths may be absolute or relative to the current working directory.
+// Remote files are fetched with GET. A response status outside 2xx returns an error.
+// The URL must serve the raw file contents. Repository page URLs, such as GitHub
+// blob URLs, are not converted to raw file URLs.
+//
+// Use [Parser.ParseStream] to parse data from an io.Reader.
 func (p *Parser) Parse(uri string) (PublicCode, error) {
 	var stream io.ReadCloser
 

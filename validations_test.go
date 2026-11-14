@@ -249,6 +249,7 @@ func TestValidLogoRemoteSingleFetch(t *testing.T) {
 				}
 				if requests > 1 {
 					w.WriteHeader(http.StatusInternalServerError)
+
 					return
 				}
 				if tc.status != 0 {

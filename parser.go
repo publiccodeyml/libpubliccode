@@ -679,12 +679,14 @@ func findKeyPos(node ast.Node, parts []string) (int, int) {
 					return 0, 0
 				}
 
+				//nolint:gosec // parts is nonempty at entry, and the single part case returns above.
 				return findKeyPos(elem, parts[1:])
 			}
 
 			if stringKey != "" {
 				// Non-numeric bracket key (eg. "description[en-US]"): navigate
 				// into the value treating the bracket content as the next key.
+				//nolint:gosec // parts is nonempty at entry.
 				return findKeyPos(mv.Value, append([]string{stringKey}, parts[1:]...))
 			}
 
@@ -694,6 +696,7 @@ func findKeyPos(node ast.Node, parts []string) (int, int) {
 				return tok.Position.Line, tok.Position.Column
 			}
 
+			//nolint:gosec // parts is nonempty at entry, and the single part case returns above.
 			return findKeyPos(mv.Value, parts[1:])
 		}
 

@@ -9,7 +9,7 @@ import (
 )
 
 func TestValidTestcasesV0_NoNetwork(t *testing.T) {
-	checkValidFilesNoNetwork("testdata/v0/valid/no-network/*.yml", t)
+	checkValidFilesNoNetwork(t, "testdata/v0/valid/no-network/*.yml")
 }
 
 func TestValidWithWarningTestcasesV0_NoNetwork(t *testing.T) {
@@ -108,9 +108,9 @@ func TestInvalidTestcasesV0_NoNetwork(t *testing.T) {
 			t.Errorf("No expected file %s", dir+file)
 		}
 	}
-
 }
 
+//nolint:maintidx // The table keeps all invalid v0 fixtures together.
 func TestInvalidTestcasesV0(t *testing.T) {
 	expected := map[string]error{
 		// publiccodeYmlVersion
@@ -650,7 +650,7 @@ func TestInvalidTestcasesV0(t *testing.T) {
 
 // Test v0 valid YAML testcases (testdata/v0/valid/).
 func TestValidTestcasesV0(t *testing.T) {
-	checkValidFiles("testdata/v0/valid/*.yml", t)
+	checkValidFiles(t, "testdata/v0/valid/*.yml")
 }
 
 // Test v0 valid YAML testcases (testdata/v0/valid_with_warnings/).
@@ -782,7 +782,7 @@ func TestDecodeValueErrorsRemote(t *testing.T) {
 }
 
 // Test that files in fields with relative paths or URLs (ie. logo, screenshots, etc.)
-// are checked and expanded correctly
+// are checked and expanded correctly.
 func TestRelativePathsOrURLs(t *testing.T) {
 	testRemoteFiles := []testType{
 		// Remote publiccode.yml and relative path in screenshots:
@@ -809,7 +809,7 @@ func TestRelativePathsOrURLs(t *testing.T) {
 		// (already tested in TestInvalidTestcasesV0)
 		// "testdata/v0/invalid/logo_missing_url.yml", ValidationResults{
 		//	ValidationError{"logo", "downloading https://google.com/no_such_file.png: not found", 18, 1},
-		//}},
+		// }},
 	}
 
 	parser, err := NewDefaultParser()
@@ -829,7 +829,7 @@ func TestRelativePathsOrURLs(t *testing.T) {
 }
 
 // Test that files in fields with relative paths or URLs (ie. logo, screenshots, etc.)
-// are checked and expanded correctly when DisableNetwork is true
+// are checked and expanded correctly when DisableNetwork is true.
 func TestRelativePathsOrURLsNoNetworkRemoteChecks(t *testing.T) {
 	testRemoteFiles := []string{
 		// Remote publiccode.yml and relative path in screenshots:
@@ -856,7 +856,7 @@ func TestRelativePathsOrURLsNoNetworkRemoteChecks(t *testing.T) {
 }
 
 // Test that files in fields with relative paths or URLs (ie. logo, screenshots, etc.)
-// are checked and expanded correctly when DisableNetwork is true
+// are checked and expanded correctly when DisableNetwork is true.
 func TestRelativePathsOrURLsNoNetwork(t *testing.T) {
 	testFiles := []testType{
 		// Local publiccode.yml and relative path in screenshot:

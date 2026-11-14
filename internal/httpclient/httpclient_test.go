@@ -324,7 +324,7 @@ func TestGetWithContextAlreadyCancelled(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(t.Context())
 	cancel()
 
 	client := New(nil)
@@ -335,12 +335,13 @@ func TestGetWithContextAlreadyCancelled(t *testing.T) {
 }
 
 func TestGetCountsBlindRetriesOnTheirOwn(t *testing.T) {
-	steps := []step{
+	steps := make([]step, 0, 4+maxBlindAttempts)
+	steps = append(steps, []step{
 		{status: http.StatusTooManyRequests, retryAfter: "1"},
 		{status: http.StatusTooManyRequests, retryAfter: "1"},
 		{status: http.StatusTooManyRequests, retryAfter: "1"},
 		{status: http.StatusTooManyRequests, retryAfter: "1"},
-	}
+	}...)
 	for range maxBlindAttempts {
 		steps = append(steps, step{status: http.StatusTooManyRequests})
 	}

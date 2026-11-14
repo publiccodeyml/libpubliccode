@@ -1,6 +1,7 @@
 package publiccode
 
 import (
+	"errors"
 	"strings"
 	"testing"
 
@@ -165,16 +166,17 @@ localisation:
 	if err == nil {
 		return // no errors at all is also fine
 	}
-	vr, ok := err.(ValidationResults)
+	var vr ValidationResults
+	ok := errors.As(err, &vr)
 	if !ok {
 		t.Fatalf("expected ValidationResults, got %T: %v", err, err)
 	}
 	hasWarning := false
 	for _, e := range vr {
-		if _, ok := e.(ValidationWarning); ok {
+		if _, ok := errors.AsType[ValidationWarning](e); ok {
 			hasWarning = true
 		}
-		if _, ok := e.(ValidationError); ok {
+		if _, ok := errors.AsType[ValidationError](e); ok {
 			t.Errorf("unexpected validation error: %v", e)
 		}
 	}
@@ -197,7 +199,7 @@ func TestDecodeTaggedMappingAsList(t *testing.T) {
 			if len(results) != 1 {
 				t.Fatalf("expected one decoding error, got %v", results)
 			}
-			if _, ok := results[0].(ValidationError); !ok {
+			if _, ok := errors.AsType[ValidationError](results[0]); !ok {
 				t.Fatalf("expected ValidationError, got %T", results[0])
 			}
 		})

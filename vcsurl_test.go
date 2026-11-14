@@ -82,6 +82,7 @@ func TestConcurrentParserNetworkPolicies(t *testing.T) {
 				p, err := NewParser(ParserConfig{AllowNetworkToPrivateHosts: allow, UserAgent: agent})
 				if err != nil {
 					t.Error(err)
+
 					return
 				}
 				if got := p.isRepo(u); got != allow {

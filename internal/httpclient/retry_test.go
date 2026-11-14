@@ -80,7 +80,7 @@ func TestGetWithContextDeadlineInterruptsRetryAfter(t *testing.T) {
 	}))
 	defer server.Close()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
+	ctx, cancel := context.WithTimeout(t.Context(), 50*time.Millisecond)
 	defer cancel()
 
 	start := time.Now()
@@ -102,7 +102,7 @@ func TestGetWithContextCancellationInterruptsRetryAfter(t *testing.T) {
 	}))
 	defer server.Close()
 
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(t.Context())
 	defer cancel()
 	time.AfterFunc(50*time.Millisecond, cancel)
 

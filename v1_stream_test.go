@@ -1,6 +1,7 @@
 package publiccode
 
 import (
+	"errors"
 	"strings"
 	"testing"
 )
@@ -43,12 +44,13 @@ localisation:
 	pc, err := p.ParseStream(strings.NewReader(yaml))
 	if err != nil {
 		// A deprecation warning about version is expected, but no hard errors.
-		vr, ok := err.(ValidationResults)
+		var vr ValidationResults
+		ok := errors.As(err, &vr)
 		if !ok {
 			t.Fatalf("unexpected error type: %T: %v", err, err)
 		}
 		for _, e := range vr {
-			if _, ok := e.(ValidationError); ok {
+			if _, ok := errors.AsType[ValidationError](e); ok {
 				t.Errorf("unexpected validation error: %v", e)
 			}
 		}

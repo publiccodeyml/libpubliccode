@@ -486,9 +486,7 @@ func validateFieldsV1(publiccode PublicCode, parser *Parser, network bool, baseU
 }
 
 // isRelativePathOrURL checks whether the field contains either a relative filename
-// or an HTTP URL
-//
-//nolint:unparam
+// or an HTTP URL.
 func isRelativePathOrURL(content string, keyName string) (bool, error) {
 	if strings.HasPrefix(content, "/") {
 		return false, newValidationError(keyName, "is an absolute path. Only relative paths or HTTP(s) URLs allowed")

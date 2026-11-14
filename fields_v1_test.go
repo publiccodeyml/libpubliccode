@@ -1,6 +1,7 @@
 package publiccode
 
 import (
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -155,6 +156,7 @@ func TestValidateFieldsV1WithNetworkChecks(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if strings.HasSuffix(r.URL.Path, "/info/refs") {
 			w.WriteHeader(http.StatusNotFound)
+
 			return
 		}
 		w.WriteHeader(http.StatusOK)
@@ -306,14 +308,16 @@ func TestValidateFieldsV0MonochromeLogoAbsPath(t *testing.T) {
 	v0.MonochromeLogo = &logo
 
 	err := validateFieldsV0(v0, p, false, base)
-	vr, ok := err.(ValidationResults)
+	var vr ValidationResults
+	ok := errors.As(err, &vr)
 	if !ok {
 		t.Fatal("expected ValidationResults")
 	}
 
 	found := false
 	for _, e := range vr {
-		if ve, ok := e.(ValidationError); ok && ve.Key == "monochromeLogo" {
+		var ve ValidationError
+		if errors.As(e, &ve) && ve.Key == "monochromeLogo" {
 			found = true
 		}
 	}
@@ -332,14 +336,15 @@ func TestValidateFieldsV0AuthorsFileAbsPath(t *testing.T) {
 	v0.Legal.AuthorsFile = &authorsFile
 
 	err := validateFieldsV0(v0, p, false, base)
-	vr, ok := err.(ValidationResults)
+	var vr ValidationResults
+	ok := errors.As(err, &vr)
 	if !ok {
 		t.Fatal("expected ValidationResults")
 	}
 
 	found := false
 	for _, e := range vr {
-		if ve, ok := e.(ValidationError); ok && ve.Key == "legal.authorsFile" {
+		if ve, ok := errors.AsType[ValidationError](e); ok && ve.Key == "legal.authorsFile" {
 			found = true
 		}
 	}
@@ -360,14 +365,15 @@ func TestValidateFieldsV0ScreenshotsAbsPath(t *testing.T) {
 	}
 
 	err := validateFieldsV0(v0, p, false, base)
-	vr, ok := err.(ValidationResults)
+	var vr ValidationResults
+	ok := errors.As(err, &vr)
 	if !ok {
 		t.Fatal("expected ValidationResults")
 	}
 
 	found := false
 	for _, e := range vr {
-		if ve, ok := e.(ValidationError); ok && strings.Contains(ve.Key, "screenshots") {
+		if ve, ok := errors.AsType[ValidationError](e); ok && strings.Contains(ve.Key, "screenshots") {
 			found = true
 		}
 	}

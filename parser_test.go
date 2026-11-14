@@ -59,7 +59,7 @@ func TestExport(t *testing.T) {
 // Parser instance simultaneously without data races, and that each call uses the
 // correct baseURL for its file.
 //
-// Run with "go test -race"
+// Run with "go test -race".
 func TestParseConcurrent(t *testing.T) {
 	const goroutines = 40
 
@@ -265,16 +265,17 @@ func TestValidationTimeout(t *testing.T) {
 	}
 }
 
-// Test the toURL function
+// Test the toURL function.
 func TestToURL(t *testing.T) {
+	cwd := testWorkingDir(t)
 	var err error
 
 	expected := map[string]*url.URL{
-		"file.txt":                              &url.URL{Scheme: "file", Path: fmt.Sprintf("%s/file.txt", cwd)},
-		"/path/file.txt":                        &url.URL{Scheme: "file", Path: "/path/file.txt"},
-		"https://developers.italia.it/":         &url.URL{Scheme: "https", Host: "developers.italia.it", Path: "/"},
-		"https://developers.italia.it/file.txt": &url.URL{Scheme: "https", Host: "developers.italia.it", Path: "/file.txt"},
-		"http://developers.italia.it/":          &url.URL{Scheme: "http", Host: "developers.italia.it", Path: "/"},
+		"file.txt":                              {Scheme: "file", Path: cwd + "/file.txt"},
+		"/path/file.txt":                        {Scheme: "file", Path: "/path/file.txt"},
+		"https://developers.italia.it/":         {Scheme: "https", Host: "developers.italia.it", Path: "/"},
+		"https://developers.italia.it/file.txt": {Scheme: "https", Host: "developers.italia.it", Path: "/file.txt"},
+		"http://developers.italia.it/":          {Scheme: "http", Host: "developers.italia.it", Path: "/"},
 	}
 
 	for in, out := range expected {
@@ -298,6 +299,7 @@ func TestParseReportsInputFileName(t *testing.T) {
 	}
 
 	file := filepath.Join(t.TempDir(), "my-amazing-code.yaml")
+	//nolint:gosec // The destination is a fixed filename under t.TempDir().
 	if err = os.WriteFile(file, source, 0o600); err != nil {
 		t.Fatalf("can't write the fixture copy: %v", err)
 	}
@@ -350,7 +352,7 @@ func TestParseStreamReportsDefaultFileName(t *testing.T) {
 	}
 }
 
-// Test the fileNameFromURL function
+// Test the fileNameFromURL function.
 func TestFileNameFromURL(t *testing.T) {
 	expected := []struct {
 		in   *url.URL

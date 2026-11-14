@@ -15,7 +15,7 @@ run:
 
   # Include test files or not.
   # Default: true
-  tests: false
+  tests: true
 
 linters:
   default: all
@@ -115,6 +115,16 @@ linters:
       - builtin$
       - examples$
     rules:
+      # Stub errors are local to each test, not part of a public error API.
+      - path: _test\.go$
+        linters: [err113]
+      # Test tables and helpers follow the existing test layout.
+      - path: _test\.go$
+        linters:
+          - paralleltest
+          - lll
+          - wsl_v5
+          - testpackage
       # Allow prints and panics in publiccode-parser/, as it's the
       # CLI tool.
       - path: publiccode-parser/

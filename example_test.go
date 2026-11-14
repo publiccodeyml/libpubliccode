@@ -130,11 +130,13 @@ func ExampleParser_ParseStream_warnings() {
 		}
 
 		for _, result := range results {
-			switch diagnostic := result.(type) {
-			case publiccode.ValidationWarning:
+			var diagnostic publiccode.ValidationWarning
+			var validationError publiccode.ValidationError
+			switch {
+			case errors.As(result, &diagnostic):
 				fmt.Println("warning:", diagnostic.Key)
-			case publiccode.ValidationError:
-				fmt.Println("error:", diagnostic.Key)
+			case errors.As(result, &validationError):
+				fmt.Println("error:", validationError.Key)
 				valid = false
 			default:
 				fmt.Println(result)

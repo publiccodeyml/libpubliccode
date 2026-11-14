@@ -1,7 +1,7 @@
 package publiccode
 
 import (
-	"log"
+	"errors"
 	"os"
 	"path"
 	"path/filepath"
@@ -14,15 +14,15 @@ type testType struct {
 	err  error
 }
 
-var cwd string
+var cwd, cwdErr = os.Getwd()
 
-func init() {
-	var err error
-
-	cwd, err = os.Getwd()
-	if err != nil {
-		log.Fatalf("failed to get cwd: %v", err)
+func testWorkingDir(t *testing.T) string {
+	t.Helper()
+	if cwdErr != nil {
+		t.Fatalf("failed to get cwd: %v", cwdErr)
 	}
+
+	return cwd
 }
 
 // Parse the YAML file passed as argument, using the current directory
@@ -57,7 +57,8 @@ func parseNoNetwork(file string) error {
 
 // Check all the YAML files matching the glob pattern and fail for each file
 // with parsing or validation errors.
-func checkValidFiles(pattern string, t *testing.T) {
+func checkValidFiles(t *testing.T, pattern string) {
+	t.Helper()
 	testFiles, _ := filepath.Glob(pattern)
 	for _, file := range testFiles {
 		t.Run(file, func(t *testing.T) {
@@ -70,7 +71,8 @@ func checkValidFiles(pattern string, t *testing.T) {
 
 // Check all the YAML files matching the glob pattern and fail for each file
 // with parsing or validation errors, with the network disabled.
-func checkValidFilesNoNetwork(pattern string, t *testing.T) {
+func checkValidFilesNoNetwork(t *testing.T, pattern string) {
+	t.Helper()
 	testFiles, _ := filepath.Glob(pattern)
 	for _, file := range testFiles {
 		t.Run(file, func(t *testing.T) {
@@ -84,7 +86,8 @@ func checkValidFilesNoNetwork(pattern string, t *testing.T) {
 // Return a copy of the expected diagnostics carrying the name of the file
 // they refer to.
 func withFileName(name string, expected error) error {
-	results, ok := expected.(ValidationResults)
+	var results ValidationResults
+	ok := errors.As(expected, &results)
 	if !ok {
 		return expected
 	}
@@ -100,13 +103,15 @@ func withFileName(name string, expected error) error {
 // The expected diagnostics are written with no file name, because every test
 // here parses a file whose name the parser reports on each of them.
 func checkParseErrors(t *testing.T, err error, test testType) {
+	t.Helper()
 	expected := withFileName(path.Base(test.file), test.err)
 
-	if expected == nil && err != nil {
+	switch {
+	case expected == nil && err != nil:
 		t.Errorf("[%s] unexpected error: %v\n", test.file, err)
-	} else if expected != nil && err == nil {
+	case expected != nil && err == nil:
 		t.Errorf("[%s] no error generated\n", test.file)
-	} else if expected != nil && err != nil {
+	case expected != nil && err != nil:
 		if !reflect.DeepEqual(expected, err) {
 			t.Errorf("[%s] wrong error generated:\n%T - %s\n- instead of:\n%T - %s", test.file, err, err, expected, expected)
 		}

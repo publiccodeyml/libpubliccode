@@ -261,7 +261,6 @@ localisation:
 			}
 		}
 	}
-
 }
 
 func TestParseStreamVersion06(t *testing.T) {

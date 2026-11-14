@@ -110,6 +110,7 @@ func TestParseHTTPRedirect(t *testing.T) {
 
 type closeTracker struct {
 	io.Reader
+
 	closed bool
 }
 

@@ -1,6 +1,7 @@
 package validators
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/go-playground/locales/en"
@@ -100,11 +101,13 @@ func (u testURL) String() string {
 // Ensure testURL satisfies the Stringer interface (used by validators).
 var _ interface{ String() string } = testURL("")
 
+//nolint:ireturn // The translation library exposes translators through its interface.
 func newTranslator(t *testing.T) ut.Translator {
 	t.Helper()
 	enLocale := en.New()
 	uni := ut.New(enLocale, enLocale)
 	trans, _ := uni.GetTranslator("en")
+
 	return trans
 }
 
@@ -208,7 +211,7 @@ func TestTranslateFuncErrorFallback(t *testing.T) {
 	}
 
 	// Translate the error — this calls translateFunc.
-	if ve, ok := err.(validator.ValidationErrors); ok {
+	if ve, ok := errors.AsType[validator.ValidationErrors](err); ok {
 		for _, fe := range ve {
 			// This calls translateFunc, which should fallback to fe.Error()
 			// when the translation key is not found.

@@ -55,7 +55,7 @@ func TestValidationErrorMarshalJSON(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var m map[string]interface{}
+	var m map[string]any
 	if err := json.Unmarshal(b, &m); err != nil {
 		t.Fatal(err)
 	}
@@ -75,7 +75,7 @@ func TestValidationWarningMarshalJSON(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var m map[string]interface{}
+	var m map[string]any
 	if err := json.Unmarshal(b, &m); err != nil {
 		t.Fatal(err)
 	}

@@ -21,15 +21,16 @@ import (
 func TestSafeHTTPClientProxyEnvironment(t *testing.T) {
 	if os.Getenv("SAFEHTTP_PROXY_CHILD") == "1" {
 		client := SafeHTTPClient(5*time.Second, false)
-		body, err := getBody(client, "http://8.8.8.8/resource")
+		body, err := getBody(t.Context(), client, "http://8.8.8.8/resource")
 		if err != nil || body != "proxied" {
 			t.Fatalf("public target through private proxy: body=%q, err=%v", body, err)
 		}
 		for _, target := range []string{"http://169.254.169.254/", "https://10.0.0.1/"} {
-			if _, err := client.Get(target); !errors.Is(err, ErrBlockedAddress) {
+			if _, err := getBody(t.Context(), client, target); !errors.Is(err, ErrBlockedAddress) {
 				t.Fatalf("private target %s: %v", target, err)
 			}
 		}
+
 		return
 	}
 	var requests atomic.Int32
@@ -41,6 +42,7 @@ func TestSafeHTTPClientProxyEnvironment(t *testing.T) {
 		_, _ = io.WriteString(w, "proxied")
 	}))
 	defer proxy.Close()
+	//nolint:gosec // Run this test binary with a fixed test selector.
 	cmd := exec.CommandContext(t.Context(), os.Args[0], "-test.run=^TestSafeHTTPClientProxyEnvironment$")
 	cmd.Env = append(os.Environ(), "SAFEHTTP_PROXY_CHILD=1", "HTTP_PROXY="+proxy.URL,
 		"HTTPS_PROXY="+proxy.URL, "NO_PROXY=", "REQUEST_METHOD=")
@@ -74,13 +76,15 @@ func TestProxyTargetFiltering(t *testing.T) {
 				router := &proxyTransport{
 					direct: roundTripFunc(func(*http.Request) (*http.Response, error) {
 						t.Fatal("unexpected direct request")
-						return nil, nil
+
+						return nil, ErrBlockedAddress
 					}),
 					proxied: roundTripFunc(func(req *http.Request) (*http.Response, error) {
 						calls++
 						if req.Context().Value(proxyURLKey{}) != proxyURL {
 							t.Error("selected proxy was not passed to transport")
 						}
+
 						return newResponse("ok", 2), nil
 					}),
 					proxy: http.ProxyURL(proxyURL),
@@ -91,10 +95,11 @@ func TestProxyTargetFiltering(t *testing.T) {
 						if tc.allowPrivate {
 							t.Error("opt out must skip DNS checks")
 						}
-						var addresses []net.IPAddr
+						addresses := make([]net.IPAddr, 0, len(tc.ips))
 						for _, ip := range tc.ips {
 							addresses = append(addresses, net.IPAddr{IP: net.ParseIP(ip)})
 						}
+
 						return addresses, tc.lookupErr
 					},
 					allowPrivate: tc.allowPrivate,
@@ -133,9 +138,9 @@ func TestProxyRedirectAndBypass(t *testing.T) {
 	defer proxy.Close()
 	proxyURL, _ := url.Parse(proxy.URL)
 	client := SafeHTTPClient(5*time.Second, false)
-	router := client.Transport.(*userAgentTransport).base.(*safeTransport).base.(*proxyTransport)
+	router := testProxyTransport(t, client)
 	router.proxy = http.ProxyURL(proxyURL)
-	if _, err := client.Get("http://8.8.8.8/"); !errors.Is(err, ErrBlockedAddress) {
+	if _, err := getBody(t.Context(), client, "http://8.8.8.8/"); !errors.Is(err, ErrBlockedAddress) {
 		t.Fatalf("redirect to private target: %v", err)
 	}
 	if requests.Load() != 1 {
@@ -143,8 +148,8 @@ func TestProxyRedirectAndBypass(t *testing.T) {
 	}
 	// Without a proxy, as when NO_PROXY matches the host, the dialer must still
 	// block private addresses.
-	router.proxy = func(*http.Request) (*url.URL, error) { return nil, nil }
-	if _, err := client.Get(proxy.URL); !errors.Is(err, ErrBlockedAddress) {
+	router.proxy = func(*http.Request) (*url.URL, error) { return nil, nil } //nolint:nilnil // A nil proxy URL means a direct connection.
+	if _, err := getBody(t.Context(), client, proxy.URL); !errors.Is(err, ErrBlockedAddress) {
 		t.Fatalf("direct private target: %v", err)
 	}
 }
@@ -163,13 +168,31 @@ func TestHTTPSProxyTarget(t *testing.T) {
 	defer proxy.Close()
 	proxyURL, _ := url.Parse(proxy.URL)
 	client := SafeHTTPClient(5*time.Second, false)
-	router := client.Transport.(*userAgentTransport).base.(*safeTransport).base.(*proxyTransport)
+	router := testProxyTransport(t, client)
 	router.proxy = http.ProxyURL(proxyURL)
-	_, err := client.Get("https://8.8.8.8/")
+	_, err := getBody(t.Context(), client, "https://8.8.8.8/")
 	if err == nil || errors.Is(err, ErrBlockedAddress) || !strings.Contains(err.Error(), http.StatusText(http.StatusBadGateway)) {
 		t.Fatalf("expected proxy response, got %v", err)
 	}
 	if connect.Load() != 1 {
 		t.Fatalf("CONNECT count=%d", connect.Load())
 	}
+}
+
+func testProxyTransport(t *testing.T, client *http.Client) *proxyTransport {
+	t.Helper()
+	agent, ok := client.Transport.(*userAgentTransport)
+	if !ok {
+		t.Fatal("expected User-Agent transport")
+	}
+	safe, ok := agent.base.(*safeTransport)
+	if !ok {
+		t.Fatal("expected safe transport")
+	}
+	proxy, ok := safe.base.(*proxyTransport)
+	if !ok {
+		t.Fatal("expected proxy transport")
+	}
+
+	return proxy
 }

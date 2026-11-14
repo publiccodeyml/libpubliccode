@@ -6,7 +6,8 @@ import (
 )
 
 func TestInvalidTestcasesV1(t *testing.T) {
-	dirs := []string{"testdata/v1/invalid/",
+	dirs := []string{
+		"testdata/v1/invalid/",
 		"testdata/v1/invalid_valid_in_v0/",
 		"testdata/v1/invalid_valid_with_warnings_in_v0/",
 	}

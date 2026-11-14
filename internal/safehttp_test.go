@@ -1,7 +1,9 @@
 package netutil
 
 import (
+	"context"
 	"errors"
+	"fmt"
 	"io"
 	"net"
 	"net/http"
@@ -46,14 +48,15 @@ func TestSafeHTTPClientBlocksPrivate(t *testing.T) {
 	defer srv.Close()
 
 	blocked := SafeHTTPClient(5*time.Second, false)
-	if _, err := blocked.Get(srv.URL); err == nil {
+	if _, err := getBody(t.Context(), blocked, srv.URL); err == nil {
 		t.Fatal("expected the SSRF guard to block the loopback request")
 	} else if !errors.Is(err, ErrBlockedAddress) && !strings.Contains(err.Error(), "non-public") {
 		t.Errorf("expected a blocked-address error, got: %v", err)
 	}
 
 	allowed := SafeHTTPClient(5*time.Second, true)
-	resp, err := allowed.Get(srv.URL)
+	req, _ := http.NewRequestWithContext(t.Context(), http.MethodGet, srv.URL, nil)
+	resp, err := allowed.Do(req)
 	if err != nil {
 		t.Fatalf("expected the opt-out client to reach the server, got: %v", err)
 	}
@@ -67,7 +70,7 @@ func (f roundTripFunc) RoundTrip(r *http.Request) (*http.Response, error) { retu
 
 func newResponse(body string, contentLength int64) *http.Response {
 	return &http.Response{
-		StatusCode:    200,
+		StatusCode:    http.StatusOK,
 		Body:          io.NopCloser(strings.NewReader(body)),
 		ContentLength: contentLength,
 		Header:        make(http.Header),
@@ -84,12 +87,13 @@ func TestResponseSizeLimitOnRead(t *testing.T) {
 		max: 10,
 	}
 
-	req, _ := http.NewRequest(http.MethodGet, "http://example.com", nil)
+	req, _ := http.NewRequestWithContext(t.Context(), http.MethodGet, "http://example.com", nil)
 	resp, err := transport.RoundTrip(req)
 	if err != nil {
 		t.Fatalf("unexpected transport error: %v", err)
 	}
 
+	defer resp.Body.Close()
 	_, err = io.ReadAll(resp.Body)
 	if !errors.Is(err, ErrResponseTooLarge) {
 		t.Errorf("expected ErrResponseTooLarge while reading, got: %v", err)
@@ -105,8 +109,12 @@ func TestResponseSizeLimitOnContentLength(t *testing.T) {
 		max: 10,
 	}
 
-	req, _ := http.NewRequest(http.MethodGet, "http://example.com", nil)
-	if _, err := transport.RoundTrip(req); !errors.Is(err, ErrResponseTooLarge) {
+	req, _ := http.NewRequestWithContext(t.Context(), http.MethodGet, "http://example.com", nil)
+	resp, err := transport.RoundTrip(req)
+	if resp != nil {
+		defer resp.Body.Close()
+	}
+	if !errors.Is(err, ErrResponseTooLarge) {
 		t.Errorf("expected ErrResponseTooLarge from Content-Length check, got: %v", err)
 	}
 }
@@ -120,12 +128,13 @@ func TestResponseUnderLimitIsReadFully(t *testing.T) {
 		max: MaxResponseBytes,
 	}
 
-	req, _ := http.NewRequest(http.MethodGet, "http://example.com", nil)
+	req, _ := http.NewRequestWithContext(t.Context(), http.MethodGet, "http://example.com", nil)
 	resp, err := transport.RoundTrip(req)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
+	defer resp.Body.Close()
 	got, err := io.ReadAll(resp.Body)
 	if err != nil {
 		t.Fatalf("unexpected read error: %v", err)
@@ -148,10 +157,12 @@ func TestUserAgentTransportSetsTheDefault(t *testing.T) {
 		userAgent: userAgent,
 	}
 
-	req, _ := http.NewRequest(http.MethodGet, "http://example.com", nil)
-	if _, err := transport.RoundTrip(req); err != nil {
+	req, _ := http.NewRequestWithContext(t.Context(), http.MethodGet, "http://example.com", nil)
+	resp, err := transport.RoundTrip(req)
+	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
+	defer resp.Body.Close()
 
 	if got != userAgent {
 		t.Errorf("User-Agent sent: got %q, want %q", got, userAgent)
@@ -183,12 +194,14 @@ func TestUserAgentTransportKeepsTheCallerHeader(t *testing.T) {
 				userAgent: "libpubliccode/1.2.3",
 			}
 
-			req, _ := http.NewRequest(http.MethodGet, "http://example.com", nil)
+			req, _ := http.NewRequestWithContext(t.Context(), http.MethodGet, "http://example.com", nil)
 			req.Header["User-Agent"] = []string{want}
 
-			if _, err := transport.RoundTrip(req); err != nil {
+			resp, err := transport.RoundTrip(req)
+			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
+			defer resp.Body.Close()
 
 			if !seen {
 				t.Fatal("the base transport was not called")
@@ -208,11 +221,12 @@ func TestSafeHTTPClientSendsUserAgent(t *testing.T) {
 	// The server echoes back what it received, so there is nothing shared
 	// between the handler and the test.
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_, _ = io.WriteString(w, r.UserAgent())
+		w.Header().Set("Content-Type", "text/plain")
+		_, _ = io.WriteString(w, r.UserAgent()) //nolint:gosec // This local test server echoes a header as plain text.
 	}))
 	defer srv.Close()
 
-	got, err := getBody(SafeHTTPClient(5*time.Second, true, WithUserAgent(userAgent)), srv.URL)
+	got, err := getBody(t.Context(), SafeHTTPClient(5*time.Second, true, WithUserAgent(userAgent)), srv.URL)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -220,7 +234,7 @@ func TestSafeHTTPClientSendsUserAgent(t *testing.T) {
 		t.Errorf("User-Agent received by the server: got %q, want %q", got, userAgent)
 	}
 
-	if got, err = getBody(SafeHTTPClient(5*time.Second, true), srv.URL); err != nil {
+	if got, err = getBody(t.Context(), SafeHTTPClient(5*time.Second, true), srv.URL); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if got != UserAgent() {
@@ -229,10 +243,14 @@ func TestSafeHTTPClientSendsUserAgent(t *testing.T) {
 }
 
 // getBody GETs url and returns the response body as a string.
-func getBody(client *http.Client, url string) (string, error) {
-	resp, err := client.Get(url)
+func getBody(ctx context.Context, client *http.Client, url string) (string, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("create request: %w", err)
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("get body: %w", err)
 	}
 
 	defer resp.Body.Close()

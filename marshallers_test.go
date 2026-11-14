@@ -55,8 +55,10 @@ func TestUrlOrUrlArrayUnmarshalYAMLSingle(t *testing.T) {
 		case *URL:
 			raw, _ := url.Parse("https://example.com")
 			*dst = URL(*raw)
+
 			return nil
 		}
+
 		return nil
 	})
 	if err != nil {
@@ -77,8 +79,10 @@ func TestUrlOrUrlArrayUnmarshalYAMLMulti(t *testing.T) {
 	err := a.UnmarshalYAML(func(v any) error {
 		if dst, ok := v.(*[]*URL); ok {
 			*dst = []*URL{u1, u2}
+
 			return nil
 		}
+
 		return nil
 	})
 	if err != nil {
@@ -95,8 +99,10 @@ func TestURLUnmarshalYAMLBadURLString(t *testing.T) {
 	err := u.UnmarshalYAML(func(v any) error {
 		if s, ok := v.(*string); ok {
 			*s = "://missing-scheme"
+
 			return nil
 		}
+
 		return nil
 	})
 	if err == nil {

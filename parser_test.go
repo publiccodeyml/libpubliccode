@@ -215,6 +215,15 @@ func TestValidationTimeout(t *testing.T) {
 					}, nil
 				}
 
+				// Logo URL resolution also checks for self hosted VCS services.
+				if r.URL.String() == srv.URL+"/api" || r.URL.String() == srv.URL+"/swagger.v1.json" {
+					return &http.Response{
+						StatusCode: http.StatusNotFound,
+						Header:     make(http.Header),
+						Body:       io.NopCloser(strings.NewReader("")),
+					}, nil
+				}
+
 				if r.URL.String() != srv.URL+"/logo.png" {
 					t.Errorf("unexpected request: %s", r.URL)
 
@@ -248,7 +257,8 @@ func TestValidationTimeout(t *testing.T) {
 				t.Fatalf("expected logo validation error, got: %v", results[0])
 			}
 
-			if !strings.Contains(validationError.Description, "context deadline exceeded") {
+			description := strings.ToLower(validationError.Description)
+			if !strings.Contains(description, "context deadline exceeded") && !strings.Contains(description, "client.timeout exceeded") {
 				t.Errorf("expected logo timeout, got: %v", validationError)
 			}
 		})

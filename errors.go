@@ -22,6 +22,7 @@ func (e ParseError) Error() string {
 // name of its own, as happens when parsing a stream.
 const defaultFileName = "publiccode.yml"
 
+// ValidationError reports a parsing or validation failure in a publiccode.yml file.
 type ValidationError struct {
 	// Name of the validated file, with no directory part. It is empty when
 	// the input is a stream, which has no name.
@@ -70,6 +71,10 @@ func newValidationErrorf(key string, description string, args ...any) Validation
 	return newValidationError(key, fmt.Sprintf(description, args...))
 }
 
+// ValidationWarning reports a condition that does not make a publiccode.yml file
+// invalid, such as use of a deprecated field. It implements error so it can be
+// returned alongside [ValidationError] values in [ValidationResults].
+//
 //nolint:errname,lll // ValidationWarning is intentionally named as a warning, not an error, even though it implements error.
 type ValidationWarning ValidationError
 
@@ -103,6 +108,10 @@ func (e ValidationWarning) MarshalJSON() ([]byte, error) {
 	})
 }
 
+// ValidationResults collects [ValidationError] and [ValidationWarning] values.
+// [Parser.Parse] and [Parser.ParseStream] return it as a non-nil error even when
+// it contains only warnings. Inspect each element to determine its severity.
+// ValidationResults does not unwrap its elements for errors.Is or errors.As.
 type ValidationResults []error //nolint:errname // intentionally named as a collection, not an error type
 
 func (vr ValidationResults) Error() string {

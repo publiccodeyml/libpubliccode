@@ -11,6 +11,9 @@ var SupportedVersions = []string{
 	"0.8.0", "0.8",
 }
 
+// PublicCode represents a decoded publiccode.yml document.
+// [Parser.Parse] and [Parser.ParseStream] can return it alongside validation
+// errors or warnings. Check their error result before using the document.
 type PublicCode interface {
 	Version() uint
 	Url() *URL

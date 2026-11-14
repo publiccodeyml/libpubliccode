@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -166,43 +167,91 @@ func TestParseTimeout(t *testing.T) {
 // TestValidationTimeout checks that external validation checks (logo) fail when
 // the server exceeds the configured timeout.
 func TestValidationTimeout(t *testing.T) {
-	slow := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		time.Sleep(50 * time.Millisecond)
-		w.WriteHeader(http.StatusOK)
-	}))
-	defer slow.Close()
-
-	// Read logo_with_url.yml and redirect its logo to the slow server.
 	fixture, err := os.ReadFile("testdata/v0/valid/logo_with_url.yml")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	// The URL below has to match the fixture byte for byte, otherwise the
-	// logo stays remote and the test measures the network instead.
-	yml := bytes.ReplaceAll(fixture,
-		[]byte("https://raw.githubusercontent.com/italia/publiccode-parser-go/2a1f25a36e0f2ab2d71efb67db8b66ff00573fbe/testdata/v0/valid/assets/img/logo.png"),
-		[]byte(slow.URL+"/logo.png"),
-	)
-
-	fast := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/yaml")
-		w.Write(yml) //nolint:errcheck
-	}))
-	defer fast.Close()
-
-	p, err := NewParser(ParserConfig{Timeout: 1 * time.Millisecond, AllowNetworkToPrivateHosts: true})
+	logo, err := os.ReadFile("testdata/v0/valid/assets/img/logo.png")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	_, err = p.Parse(fast.URL + "/publiccode.yml")
-	if err == nil {
-		t.Fatal("expected timeout error, got nil")
-	}
+	for _, slow := range []bool{false, true} {
+		t.Run(fmt.Sprintf("slow=%t", slow), func(t *testing.T) {
+			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if slow {
+					timer := time.NewTimer(time.Second)
+					defer timer.Stop()
 
-	if lower := strings.ToLower(err.Error()); !strings.Contains(lower, "deadline exceeded") && !strings.Contains(lower, "timeout") {
-		t.Errorf("expected timeout error, got: %v", err)
+					select {
+					case <-r.Context().Done():
+						return
+					case <-timer.C:
+					}
+				}
+
+				_, _ = w.Write(logo)
+			}))
+			defer srv.Close()
+
+			p, err := NewParser(ParserConfig{
+				Timeout:                    100 * time.Millisecond,
+				AllowNetworkToPrivateHosts: true,
+				BaseURL:                    srv.URL,
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			transport := p.client.Transport
+			p.client.Transport = roundTripperFunc(func(r *http.Request) (*http.Response, error) {
+				// The repository check must not use the network or consume the logo timeout.
+				if r.URL.String() == "https://github.com/italia/developers.italia.it.git" {
+					return &http.Response{
+						StatusCode: http.StatusOK,
+						Header:     make(http.Header),
+						Body:       io.NopCloser(strings.NewReader("")),
+					}, nil
+				}
+
+				if r.URL.String() != srv.URL+"/logo.png" {
+					t.Errorf("unexpected request: %s", r.URL)
+
+					return nil, fmt.Errorf("unexpected request: %s", r.URL)
+				}
+
+				return transport.RoundTrip(r)
+			})
+
+			yml := bytes.ReplaceAll(fixture,
+				[]byte("https://raw.githubusercontent.com/italia/publiccode-parser-go/2a1f25a36e0f2ab2d71efb67db8b66ff00573fbe/testdata/v0/valid/assets/img/logo.png"),
+				[]byte(srv.URL+"/logo.png"),
+			)
+
+			_, err = p.ParseStream(bytes.NewReader(yml))
+			if !slow {
+				if err != nil {
+					t.Fatalf("unexpected validation error for fast logo: %v", err)
+				}
+
+				return
+			}
+
+			var results ValidationResults
+			if !errors.As(err, &results) || len(results) != 1 {
+				t.Fatalf("expected one logo validation error, got: %v", err)
+			}
+
+			var validationError ValidationError
+			if !errors.As(results[0], &validationError) || validationError.Key != "logo" {
+				t.Fatalf("expected logo validation error, got: %v", results[0])
+			}
+
+			if !strings.Contains(validationError.Description, "context deadline exceeded") {
+				t.Errorf("expected logo timeout, got: %v", validationError)
+			}
+		})
 	}
 }
 

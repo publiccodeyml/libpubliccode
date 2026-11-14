@@ -1,10 +1,12 @@
 package validators
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/go-playground/locales/en"
 	ut "github.com/go-playground/universal-translator"
+	"github.com/go-playground/validator/v10"
 	en_translations "github.com/go-playground/validator/v10/translations/en"
 )
 
@@ -79,25 +81,40 @@ func TestRegisterLocalErrorMessagesOrgURIInvalidIPAAlreadyRegistered(t *testing.
 	}
 }
 
-func TestTranslateFuncFallback(t *testing.T) {
-	// translateFunc falls back to fe.Error() when the translation key is not found.
-	// We verify this by registering a custom translation with no message key
-	// and triggering a validation that uses it.
-	// This is an indirect test: just ensure RegisterLocalErrorMessages succeeds
-	// and the validator can validate with translations without panicking.
+func TestTranslateFunc(t *testing.T) {
 	v := New()
-	enLocale := en.New()
-	uni := ut.New(enLocale, enLocale)
-	trans, _ := uni.GetTranslator("en")
-	_ = en_translations.RegisterDefaultTranslations(v, trans)
-	_ = RegisterLocalErrorMessages(v, trans)
-
-	// Trigger a validation error to exercise translateFunc.
 	type S struct {
 		Lang string `validate:"bcp47_strict_language_tag"`
 	}
+
 	err := v.Struct(S{Lang: "not-a-valid-lang-123456789"})
-	if err == nil {
-		t.Fatal("expected validation error")
+	var validationErrors validator.ValidationErrors
+	if !errors.As(err, &validationErrors) || len(validationErrors) != 1 {
+		t.Fatalf("expected one validation error, got %v", err)
+	}
+	fe := validationErrors[0]
+
+	for _, tc := range []struct {
+		name        string
+		translation string
+		want        string
+	}{
+		{name: "missing key", want: fe.Error()},
+		{name: "registered key", translation: "{0} is not a language", want: "Lang is not a language"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			enLocale := en.New()
+			uni := ut.New(enLocale, enLocale)
+			trans, _ := uni.GetTranslator("en")
+			if tc.translation != "" {
+				if err := trans.Add(fe.Tag(), tc.translation, false); err != nil {
+					t.Fatalf("registering translation: %v", err)
+				}
+			}
+
+			if got := translateFunc(trans, fe); got != tc.want {
+				t.Errorf("translateFunc() = %q, want %q", got, tc.want)
+			}
+		})
 	}
 }

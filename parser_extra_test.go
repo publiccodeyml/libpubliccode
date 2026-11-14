@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -261,4 +262,32 @@ localisation:
 		}
 	}
 
+}
+
+func TestParseStreamVersion06(t *testing.T) {
+	data, err := os.ReadFile("testdata/v0/valid/no-network/standard_minimal_example.yml")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, version := range []string{"0.6", "0.6.0"} {
+		t.Run(version, func(t *testing.T) {
+			p, err := NewParser(ParserConfig{DisableNetwork: true})
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			input := strings.Replace(string(data), `publiccodeYmlVersion: "0"`, `publiccodeYmlVersion: "`+version+`"`, 1)
+			pc, err := p.ParseStream(strings.NewReader(input))
+			if pc == nil {
+				t.Fatal("expected a parsed document")
+			}
+			expected := ValidationResults{
+				ValidationWarning{"", "publiccodeYmlVersion", "v" + version + " is not the latest version, use '0'. Parsing this file as v0.8.", 1, 1},
+			}
+			if !reflect.DeepEqual(err, expected) {
+				t.Fatalf("unexpected diagnostics: got %#v, want %#v", err, expected)
+			}
+		})
+	}
 }

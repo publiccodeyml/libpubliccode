@@ -1,7 +1,9 @@
 package publiccode_test
 
 import (
+	"errors"
 	"fmt"
+	"os"
 	"strings"
 
 	publiccode "github.com/publiccodeyml/libpubliccode/v5"
@@ -101,4 +103,48 @@ localisation:
 		fmt.Println(err)
 	}
 	// Output:
+}
+
+// A valid document can return warnings through the error result.
+func ExampleParser_ParseStream_warnings() {
+	data, err := os.ReadFile("testdata/v0/valid/valid.minimal.yml")
+	if err != nil {
+		panic(err)
+	}
+
+	// An older supported version produces a warning.
+	input := strings.Replace(string(data), `publiccodeYmlVersion: "0"`, `publiccodeYmlVersion: "0.7"`, 1)
+	parser, err := publiccode.NewParser(publiccode.ParserConfig{DisableNetwork: true})
+	if err != nil {
+		panic(err)
+	}
+
+	pc, err := parser.ParseStream(strings.NewReader(input))
+	valid := pc != nil
+	if err != nil {
+		results, ok := errors.AsType[publiccode.ValidationResults](err)
+		if !ok {
+			fmt.Println(err)
+
+			return
+		}
+
+		for _, result := range results {
+			switch diagnostic := result.(type) {
+			case publiccode.ValidationWarning:
+				fmt.Println("warning:", diagnostic.Key)
+			case publiccode.ValidationError:
+				fmt.Println("error:", diagnostic.Key)
+				valid = false
+			default:
+				fmt.Println(result)
+				valid = false
+			}
+		}
+	}
+
+	fmt.Println("valid:", valid)
+	// Output:
+	// warning: publiccodeYmlVersion
+	// valid: true
 }

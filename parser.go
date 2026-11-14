@@ -167,7 +167,13 @@ func NewDefaultParser() (*Parser, error) {
 	return NewParser(ParserConfig{})
 }
 
-// ParseStream reads the data and tries to parse it. Returns an error if fails.
+// ParseStream reads and validates a publiccode.yml file from in.
+// It returns a non-nil [ValidationResults] error when validation produces errors
+// or warnings, including when there are only warnings. Inspect each result for
+// [ValidationError] or [ValidationWarning] to distinguish them.
+//
+// The returned [PublicCode] may be nil if parsing fails before decoding.
+// A non-nil PublicCode does not imply that validation succeeded.
 func (p *Parser) ParseStream(in io.Reader) (PublicCode, error) {
 	return p.parseStream(in, nil)
 }
@@ -179,6 +185,12 @@ func (p *Parser) ParseStream(in io.Reader) (PublicCode, error) {
 // blob URLs, are not converted to raw file URLs.
 //
 // Use [Parser.ParseStream] to parse data from an io.Reader.
+//
+// Like ParseStream, Parse returns a non-nil [ValidationResults] error for
+// warnings as well as validation errors. Inspect each result for [ValidationError]
+// or [ValidationWarning] before deciding whether to accept the returned [PublicCode].
+// A non-nil PublicCode does not imply that validation succeeded. Errors opening
+// or fetching the file return a nil PublicCode and an error outside ValidationResults.
 func (p *Parser) Parse(uri string) (PublicCode, error) {
 	var stream io.ReadCloser
 

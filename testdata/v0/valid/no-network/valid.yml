@@ -211,8 +211,8 @@ dependsOn:
 
 IT:
   piattaforme:
-    spid: true
-    pagopa: true
-    cie: true
-    anpr: true
-    io: true
+    spid: false
+    pagopa: false
+    cie: false
+    anpr: false
+    io: false

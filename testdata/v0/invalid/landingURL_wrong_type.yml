@@ -113,7 +113,7 @@ dependsOn:
 
 IT:
   piattaforme:
-    spid: true
-    pagopa: true
-    cie: true
-    anpr: true
+    spid: false
+    pagopa: false
+    cie: false
+    anpr: false

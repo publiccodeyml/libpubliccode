@@ -289,10 +289,18 @@ func validateFieldsV0(publiccode PublicCode, parser *Parser, network bool, baseU
 
 	if it != nil {
 		if it.Conforme != nil {
-			vr = append(vr, newValidationWarning(
-				"IT.conforme",
-				"This key is DEPRECATED and will be removed in the future. It's safe to drop it",
-			))
+			if it.Conforme.GDPR != nil && *it.Conforme.GDPR {
+				vr = append(vr, newValidationWarning(
+					"IT.conforme.gdpr",
+					"This key is DEPRECATED and will be removed in the future. "+
+						"Add a 'supports' entry with id 'alias:gdpr' instead",
+				))
+			} else {
+				vr = append(vr, newValidationWarning(
+					"IT.conforme",
+					"This key is DEPRECATED and will be removed in the future. It's safe to drop it",
+				))
+			}
 		}
 
 		if it.Riuso.CodiceIPA != "" {

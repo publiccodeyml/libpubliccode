@@ -305,6 +305,28 @@ func validateFieldsV0(publiccode PublicCode, parser *Parser, network bool, baseU
 				))
 			}
 		}
+
+		platforms := []struct {
+			key string
+			set bool
+		}{
+			{"spid", it.Piattaforme.SPID},
+			{"pagopa", it.Piattaforme.PagoPa},
+			{"cie", it.Piattaforme.CIE},
+			{"anpr", it.Piattaforme.ANPR},
+			{"io", it.Piattaforme.Io},
+		}
+
+		for _, p := range platforms {
+			if p.set {
+				vr = append(vr, newValidationWarningf(
+					"IT.piattaforme."+p.key,
+					"This key is DEPRECATED and will be removed in the future. "+
+						"Add a 'supports' entry with id 'alias:%s' instead",
+					p.key,
+				))
+			}
+		}
 	}
 
 	if len(vr) == 0 {

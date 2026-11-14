@@ -711,6 +711,13 @@ func TestValidWithWarningsTestcasesV0(t *testing.T) {
 		"valid_with_videos.yml": ValidationResults{
 			ValidationWarning{"", "description.en-GB.videos", "This key is DEPRECATED and will be removed in the future. Link videos from the documentation or the website instead", 37, 5},
 		},
+		"valid_with_IT_piattaforme.yml": ValidationResults{
+			ValidationWarning{"", "IT.piattaforme.spid", "This key is DEPRECATED and will be removed in the future. Add a 'supports' entry with id 'alias:spid' instead", 217, 5},
+			ValidationWarning{"", "IT.piattaforme.pagopa", "This key is DEPRECATED and will be removed in the future. Add a 'supports' entry with id 'alias:pagopa' instead", 218, 5},
+			ValidationWarning{"", "IT.piattaforme.cie", "This key is DEPRECATED and will be removed in the future. Add a 'supports' entry with id 'alias:cie' instead", 219, 5},
+			ValidationWarning{"", "IT.piattaforme.anpr", "This key is DEPRECATED and will be removed in the future. Add a 'supports' entry with id 'alias:anpr' instead", 220, 5},
+			ValidationWarning{"", "IT.piattaforme.io", "This key is DEPRECATED and will be removed in the future. Add a 'supports' entry with id 'alias:io' instead", 221, 5},
+		},
 		"valid_with_IT_riuso_codiceIPA.yml": ValidationResults{
 			ValidationWarning{"", "IT.riuso.codiceIPA", "This key is DEPRECATED and will be removed in the future. Use 'organisation.uri' and set it to 'urn:x-italian-pa:pcm' instead", 103, 5},
 		},

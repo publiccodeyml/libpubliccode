@@ -678,6 +678,9 @@ func TestValidWithWarningsTestcasesV0(t *testing.T) {
 			ValidationWarning{"", "inputTypes", "This key is DEPRECATED and will be removed in the future. It's safe to drop it", 48, 1},
 			ValidationWarning{"", "outputTypes", "This key is DEPRECATED and will be removed in the future. It's safe to drop it", 50, 1},
 		},
+		"valid_with_it_conforme_gdpr.yml": ValidationResults{
+			ValidationWarning{"", "IT.conforme.gdpr", "This key is DEPRECATED and will be removed in the future. Add a 'supports' entry with id 'alias:gdpr' instead", 108, 5},
+		},
 		"valid_with_it_conforme.yml": ValidationResults{
 			ValidationWarning{"", "IT.conforme", "This key is DEPRECATED and will be removed in the future. It's safe to drop it", 103, 3},
 		},

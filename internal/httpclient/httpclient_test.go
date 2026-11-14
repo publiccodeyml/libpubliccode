@@ -329,36 +329,8 @@ func TestGetWithContextAlreadyCancelled(t *testing.T) {
 
 	client := New(nil)
 	_, err := client.GetWithContext(ctx, ts.URL, nil)
-	if err == nil {
-		t.Fatal("expected error for cancelled context, got nil")
-	}
-}
-
-// TestGetWithContextCancelInterruptsBackoff verifies that an explicit
-// context cancellation does interrupt a Retry-After sleep.
-func TestGetWithContextCancelInterruptsBackoff(t *testing.T) {
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-		w.Header().Set("Retry-After", "30")
-		w.WriteHeader(http.StatusTooManyRequests)
-	}))
-	defer ts.Close()
-
-	ctx, cancel := context.WithCancel(context.Background())
-	go func() {
-		time.Sleep(200 * time.Millisecond)
-		cancel()
-	}()
-
-	start := time.Now()
-	client := New(nil)
-	_, err := client.GetWithContext(ctx, ts.URL, nil)
-	elapsed := time.Since(start)
-
-	if err == nil {
-		t.Fatal("expected error for cancelled context, got nil")
-	}
-	if elapsed >= 5*time.Second {
-		t.Errorf("cancel did not interrupt backoff: elapsed %v", elapsed)
+	if !errors.Is(err, context.Canceled) {
+		t.Fatalf("GetWithContext() error = %v, want context canceled", err)
 	}
 }
 

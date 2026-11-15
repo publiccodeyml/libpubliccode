@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
@@ -288,5 +289,72 @@ func TestParseStreamVersion06(t *testing.T) {
 				t.Fatalf("unexpected diagnostics: got %#v, want %#v", err, expected)
 			}
 		})
+	}
+}
+
+func TestParseUTF8ByteOrderMark(t *testing.T) {
+	p, err := NewParser(ParserConfig{DisableExternalChecks: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	src := "testdata/v0/valid/valid.yml"
+	data, err := os.ReadFile(src)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	want, err := p.ParseStream(bytes.NewReader(data))
+	if err != nil {
+		t.Fatalf("parsing without byte order mark: %v", err)
+	}
+
+	bom := append([]byte("\xef\xbb\xbf"), data...)
+
+	got, err := p.ParseStream(bytes.NewReader(bom))
+	if err != nil {
+		t.Fatalf("ParseStream with byte order mark: %v", err)
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Error("ParseStream with byte order mark returned a different model")
+	}
+
+	file := filepath.Join(t.TempDir(), "publiccode.yml")
+	//nolint:gosec // The destination is a fixed filename under t.TempDir().
+	if err := os.WriteFile(file, bom, 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	got, err = p.Parse(file)
+	if err != nil {
+		t.Fatalf("Parse with byte order mark: %v", err)
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Error("Parse with byte order mark returned a different model")
+	}
+}
+
+func TestParseStreamKeepsByteOrderMarkInValues(t *testing.T) {
+	p, err := NewParser(ParserConfig{DisableExternalChecks: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	data, err := os.ReadFile("testdata/v0/valid/valid.yml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	data = bytes.Replace(data, []byte("name: Medusa"), []byte("name: \"\ufeffMedusa\""), 1)
+
+	pc, err := p.ParseStream(bytes.NewReader(data))
+	if err != nil {
+		t.Fatal(err)
+	}
+	v0, ok := pc.(PublicCodeV0)
+	if !ok {
+		t.Fatalf("model type = %T, want PublicCodeV0", pc)
+	}
+	if name := v0.Name; name != "\ufeffMedusa" {
+		t.Errorf("name = %q, want %q", name, "\ufeffMedusa")
 	}
 }

@@ -28,9 +28,9 @@ parser, err := publiccode.NewDefaultParser()
 
 // error handling
 
-publiccode, err := parser.Parse("/path/to/local/dir/publiccode.yml")
+publicCode, err := parser.Parse("/path/to/local/dir/publiccode.yml")
 // OR
-// parse.Parse("https://github.com/example/example/publiccode.yml")
+// publicCode, err := parser.Parse("https://raw.githubusercontent.com/example/example/HEAD/publiccode.yml")
 ```
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/publiccodeyml/libpubliccode/v5.svg)](https://pkg.go.dev/github.com/publiccodeyml/libpubliccode/v5)

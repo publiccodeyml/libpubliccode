@@ -300,6 +300,10 @@ func (p *Parser) parseAndValidate(in io.Reader, fileURL *url.URL) (PublicCode, e
 		return nil, ValidationResults{newValidationError("", "Invalid UTF-8")}
 	}
 
+	// YAML 1.2 allows a leading byte order mark, but the AST parser
+	// rejects it as content.
+	b = bytes.TrimPrefix(b, []byte("\xef\xbb\xbf"))
+
 	// Parse the YAML into an AST so we can look up line/column positions and
 	// detect structural issues (multi-document, empty file, syntax errors).
 	file, err := parser.ParseBytes(b, 0)

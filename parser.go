@@ -93,7 +93,10 @@ type ParserConfig struct {
 	// It is false by default so that URLs coming from an untrusted
 	// publiccode.yml cannot be abused to perform SSRF against internal services
 	// or cloud metadata endpoints. Enable it only when the input is trusted
-	// (or in tests targeting a local server).
+	// (or in tests targeting a local server). A proxy set in HTTP_PROXY or
+	// HTTPS_PROXY can have a private address. The parser still checks the
+	// addresses of each target host, but the proxy resolves the host again, so
+	// it needs its own filtering when its DNS answers can differ.
 	AllowNetworkToPrivateHosts bool
 }
 

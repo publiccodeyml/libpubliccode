@@ -3,6 +3,7 @@ package publiccode
 import (
 	"fmt"
 	"net/url"
+	"path"
 	"regexp"
 	"strings"
 
@@ -50,7 +51,7 @@ func validateFieldsV0(publiccode PublicCode, parser *Parser, network bool, baseU
 	}
 
 	if publiccodev0.Logo != nil && *publiccodev0.Logo != "" {
-		if _, err := isRelativePathOrURL(*publiccodev0.Logo, "logo"); err != nil {
+		if err := isRepositoryPathOrURL(*publiccodev0.Logo, "logo"); err != nil {
 			vr = append(vr, err)
 		} else if !parser.disableExternalChecks {
 			u := parser.toAbsoluteURL(*publiccodev0.Logo, baseURL, network)
@@ -69,7 +70,7 @@ func validateFieldsV0(publiccode PublicCode, parser *Parser, network bool, baseU
 			"This key is DEPRECATED and will be removed in the future. Use 'logo' instead",
 		))
 
-		if _, err := isRelativePathOrURL(*publiccodev0.MonochromeLogo, "monochromeLogo"); err != nil {
+		if err := isRepositoryPathOrURL(*publiccodev0.MonochromeLogo, "monochromeLogo"); err != nil {
 			vr = append(vr, err)
 		} else if !parser.disableExternalChecks {
 			u := parser.toAbsoluteURL(*publiccodev0.MonochromeLogo, baseURL, network)
@@ -223,7 +224,7 @@ func validateFieldsV0(publiccode PublicCode, parser *Parser, network bool, baseU
 
 		for i, v := range desc.Screenshots {
 			keyName := fmt.Sprintf("description.%s.screenshots[%d]", lang, i)
-			if _, err := isRelativePathOrURL(v, keyName); err != nil {
+			if err := isRepositoryPathOrURL(v, keyName); err != nil {
 				vr = append(vr, err)
 			} else if !parser.disableExternalChecks {
 				u := parser.toAbsoluteURL(v, baseURL, network)
@@ -468,6 +469,22 @@ func validateFieldsV1(publiccode PublicCode, parser *Parser, network bool, baseU
 	}
 
 	return vr
+}
+
+// isRepositoryPathOrURL is isRelativePathOrURL with the Standard's rule
+// that a path must not refer to a file outside the repository.
+func isRepositoryPathOrURL(content string, keyName string) error {
+	isURL := urlSchemeRegexp.MatchString(content)
+
+	if !isURL && !strings.HasPrefix(content, "/") {
+		if cleaned := path.Clean(content); cleaned == ".." || strings.HasPrefix(cleaned, "../") {
+			return newValidationError(keyName, "refers to a file outside the repository")
+		}
+	}
+
+	_, err := isRelativePathOrURL(content, keyName)
+
+	return err
 }
 
 // isRelativePathOrURL checks whether the field contains either a relative filename

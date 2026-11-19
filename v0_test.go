@@ -211,6 +211,9 @@ func TestInvalidTestcasesV0(t *testing.T) {
 		"logo_absolute_path.yml": ValidationResults{
 			ValidationError{"", "logo", "is an absolute path. Only relative paths or HTTP(s) URLs allowed", 18, 1},
 		},
+		"logo_outside_repository.yml": ValidationResults{
+			ValidationError{"", "logo", "refers to a file outside the repository", 18, 1},
+		},
 		"logo_file_scheme.yml": ValidationResults{
 			ValidationError{"", "logo", "is a file:// URL. Only relative paths or HTTP(s) URLs allowed", 18, 1},
 		},
@@ -254,6 +257,10 @@ func TestInvalidTestcasesV0(t *testing.T) {
 		"monochromeLogo_missing_file.yml": ValidationResults{
 			ValidationWarning{"", "monochromeLogo", "This key is DEPRECATED and will be removed in the future. Use 'logo' instead", 18, 1},
 			ValidationError{"", "monochromeLogo", "no such file: " + cwd + "/testdata/v0/invalid/no_such_file.png", 18, 1},
+		},
+		"monochromeLogo_outside_repository.yml": ValidationResults{
+			ValidationWarning{"", "monochromeLogo", "This key is DEPRECATED and will be removed in the future. Use 'logo' instead", 18, 1},
+			ValidationError{"", "monochromeLogo", "refers to a file outside the repository", 18, 1},
 		},
 
 		// organisation
@@ -439,6 +446,9 @@ func TestInvalidTestcasesV0(t *testing.T) {
 				42,
 				9,
 			},
+		},
+		"description_en_screenshots_outside_repository.yml": ValidationResults{
+			ValidationError{"", "description.en.screenshots[0]", "refers to a file outside the repository", 42, 9},
 		},
 		"description_en_awards_wrong_type.yml": ValidationResults{
 			ValidationError{"", "description.en.awards", "wrong type for this field", 40, 1},

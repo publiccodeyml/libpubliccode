@@ -111,7 +111,8 @@ func (e ValidationWarning) MarshalJSON() ([]byte, error) {
 
 // ValidationResults collects [ValidationError] and [ValidationWarning] values.
 // [Parser.Parse] and [Parser.ParseStream] return it as a non-nil error even when
-// it contains only warnings. Inspect each element to determine its severity.
+// it contains only warnings. Use [ValidationResults.HasErrors] to tell whether the
+// file is valid, or inspect each element to determine its severity.
 // ValidationResults does not unwrap its elements for errors.Is or errors.As.
 type ValidationResults []error //nolint:errname // intentionally named as a collection, not an error type
 
@@ -122,6 +123,16 @@ func (vr ValidationResults) Error() string {
 	}
 
 	return strings.Join(s, "\n")
+}
+
+// HasErrors reports whether vr contains a [ValidationError]. A file whose
+// results hold only [ValidationWarning] values is valid.
+func (vr ValidationResults) HasErrors() bool {
+	return slices.ContainsFunc(vr, func(err error) bool {
+		_, ok := errors.AsType[ValidationError](err)
+
+		return ok
+	})
 }
 
 // sortByPosition orders diagnostics as they appear in the file. Some checks

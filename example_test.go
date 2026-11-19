@@ -120,30 +120,23 @@ func ExampleParser_ParseStream_warnings() {
 	}
 
 	pc, err := parser.ParseStream(strings.NewReader(input))
-	valid := pc != nil
-	if err != nil {
-		results, ok := errors.AsType[publiccode.ValidationResults](err)
-		if !ok {
-			fmt.Println(err)
+	results, ok := errors.AsType[publiccode.ValidationResults](err)
+	if err != nil && !ok {
+		fmt.Println(err)
 
-			return
-		}
+		return
+	}
 
-		for _, result := range results {
-			var diagnostic publiccode.ValidationWarning
-			var validationError publiccode.ValidationError
-			switch {
-			case errors.As(result, &diagnostic):
-				fmt.Println("warning:", diagnostic.Key)
-			case errors.As(result, &validationError):
-				fmt.Println("error:", validationError.Key)
-				valid = false
-			default:
-				fmt.Println(result)
-				valid = false
-			}
+	for _, result := range results {
+		if warning, ok := errors.AsType[publiccode.ValidationWarning](result); ok {
+			fmt.Println("warning:", warning.Key)
+		} else {
+			fmt.Println(result)
 		}
 	}
+
+	// Warnings alone leave the file valid.
+	valid := pc != nil && !results.HasErrors()
 
 	fmt.Println("valid:", valid)
 	// Output:

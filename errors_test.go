@@ -3,6 +3,7 @@ package publiccode
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/url"
 	"testing"
 )
@@ -152,5 +153,31 @@ func TestNewNotImageErrorNamesURLOnce(t *testing.T) {
 		if got.Description != tt.want {
 			t.Errorf("Description = %q, want %q", got.Description, tt.want)
 		}
+	}
+}
+
+func TestValidationResultsHasErrors(t *testing.T) {
+	warning := ValidationWarning{Key: "foo", Description: "minor warning"}
+	validationError := ValidationError{Key: "bar", Description: "bad field"}
+
+	tests := []struct {
+		name    string
+		results ValidationResults
+		want    bool
+	}{
+		{"nil", nil, false},
+		{"only warnings", ValidationResults{warning, warning}, false},
+		{"one error", ValidationResults{validationError}, true},
+		{"error after a warning", ValidationResults{warning, validationError}, true},
+		{"wrapped error", ValidationResults{fmt.Errorf("wrapped: %w", validationError)}, true},
+		{"other error type", ValidationResults{errors.New("plain")}, false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.results.HasErrors(); got != tt.want {
+				t.Errorf("HasErrors() = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }

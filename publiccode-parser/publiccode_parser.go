@@ -179,13 +179,7 @@ func hasValidationErrors(results error) bool {
 	}
 
 	if vr, ok := errors.AsType[publiccode.ValidationResults](results); ok {
-		for _, res := range vr {
-			if _, ok := errors.AsType[publiccode.ValidationError](res); ok {
-				return true
-			}
-		}
-
-		return false
+		return vr.HasErrors()
 	}
 
 	return true

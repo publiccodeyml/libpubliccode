@@ -57,6 +57,13 @@ mypubliccode.yml:48:3: warning: legal.authorsFile: This key is DEPRECATED and wi
 mypubliccode.yml:12:5: warning: description.en.genericName: This key is DEPRECATED and will be removed in the future. It's safe to drop it
 ```
 
+The argument can also be the URL of a remote `publiccode.yml`, so you can
+check the manifest of a published repository without cloning it:
+
+```shell
+publiccode-parser https://raw.githubusercontent.com/publiccodeyml/libpubliccode/main/publiccode.yml
+```
+
 Run `publiccode-parser --help` for the available command line flags.
 
 The tool returns 0 in case of successful validation, 1 when the file has

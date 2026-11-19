@@ -46,7 +46,7 @@ func run(args []string, stdout, stderr io.Writer) int {
 	flags := flag.NewFlagSet("publiccode-parser", flag.ContinueOnError)
 	flags.SetOutput(stderr)
 	flags.Usage = func() {
-		_, _ = fmt.Fprintf(flags.Output(), "Usage: %s [ OPTIONS ] publiccode.yml\n", flags.Name())
+		_, _ = fmt.Fprintf(flags.Output(), "Usage: %s [ OPTIONS ] publiccode.yml|URL\n", flags.Name())
 
 		flags.PrintDefaults()
 	}

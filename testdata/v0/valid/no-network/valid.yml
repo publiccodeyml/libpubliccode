@@ -208,11 +208,3 @@ dependsOn:
   hardware:
     - name: NFC Reader
       optional: true
-
-IT:
-  piattaforme:
-    spid: false
-    pagopa: false
-    cie: false
-    anpr: false
-    io: false

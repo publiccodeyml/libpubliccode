@@ -282,7 +282,7 @@ func validateFieldsV0(publiccode PublicCode, parser *Parser, network bool, baseU
 	if publiccodev0.It != nil {
 		vr = append(vr, newValidationWarning(
 			"it",
-			"Lowercase country codes are DEPRECATED and will be removed in the future. Use 'IT' instead",
+			"This key is DEPRECATED and will be removed in the future. It's safe to drop it",
 		))
 
 		it = publiccodev0.It

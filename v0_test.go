@@ -599,7 +599,7 @@ func TestInvalidTestcasesV0(t *testing.T) {
 			ValidationWarning{"", "description.en.videos", "This key is DEPRECATED and will be removed in the future. Link videos from the documentation or the website instead", 60, 5},
 			ValidationWarning{"", "dependsOn.open", "This key is DEPRECATED and will be removed in the future. It's safe to drop it", 85, 3},
 			ValidationWarning{"", "IT", "This key is DEPRECATED and will be removed in the future. It's safe to drop it", 105, 1},
-			ValidationWarning{"", "it", "Lowercase country codes are DEPRECATED and will be removed in the future. Use 'IT' instead", 114, 1},
+			ValidationWarning{"", "it", "This key is DEPRECATED and will be removed in the future. It's safe to drop it", 114, 1},
 			ValidationError{"", "it", "'IT' key already present. Remove this key", 114, 1},
 		},
 		"it_wrong_case.yml": ValidationResults{
@@ -694,7 +694,7 @@ func TestValidWithWarningsTestcasesV0(t *testing.T) {
 			ValidationWarning{"", "IT.conforme", "This key is DEPRECATED and will be removed in the future. It's safe to drop it", 103, 3},
 		},
 		"valid_with_country_specific_section_downcase.yml": ValidationResults{
-			ValidationWarning{"", "it", "Lowercase country codes are DEPRECATED and will be removed in the future. Use 'IT' instead", 91, 1},
+			ValidationWarning{"", "it", "This key is DEPRECATED and will be removed in the future. It's safe to drop it", 91, 1},
 		},
 		"valid_with_lowercase_countries.yml": ValidationResults{
 			ValidationWarning{"", "intendedAudience.countries[0]", "Lowercase country codes are DEPRECATED. Use uppercase instead ('IT')", 27, 7},

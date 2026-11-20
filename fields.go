@@ -272,6 +272,13 @@ func validateFieldsV0(publiccode PublicCode, parser *Parser, network bool, baseU
 
 	it := publiccodev0.IT
 
+	if publiccodev0.IT != nil {
+		vr = append(vr, newValidationWarning(
+			"IT",
+			"This key is DEPRECATED and will be removed in the future. It's safe to drop it",
+		))
+	}
+
 	if publiccodev0.It != nil {
 		vr = append(vr, newValidationWarning(
 			"it",

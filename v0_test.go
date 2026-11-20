@@ -16,6 +16,7 @@ func TestValidWithWarningTestcasesV0_NoNetwork(t *testing.T) {
 	expected := map[string]error{
 		"authorsFile.yml": ValidationResults{
 			ValidationWarning{"", "legal.authorsFile", "This key is DEPRECATED and will be removed in the future. It's safe to drop it", 63, 3},
+			ValidationWarning{"", "IT", "This key is DEPRECATED and will be removed in the future. It's safe to drop it", 95, 1},
 		},
 	}
 
@@ -55,6 +56,7 @@ func TestInvalidTestcasesV0_NoNetwork(t *testing.T) {
 			ValidationWarning{"", "usedBy", "This key is DEPRECATED and will be removed in the future. It's safe to drop it", 21, 1},
 			ValidationWarning{"", "description.en.videos", "This key is DEPRECATED and will be removed in the future. Link videos from the documentation or the website instead", 62, 5},
 			ValidationWarning{"", "dependsOn.open", "This key is DEPRECATED and will be removed in the future. It's safe to drop it", 102, 3},
+			ValidationWarning{"", "IT", "This key is DEPRECATED and will be removed in the future. It's safe to drop it", 118, 1},
 		},
 
 		// monochromeLogo
@@ -156,6 +158,7 @@ func TestInvalidTestcasesV0(t *testing.T) {
 			ValidationError{"", "landingURL", "wrong type for this field", 8, 1},
 			ValidationWarning{"", "usedBy", "This key is DEPRECATED and will be removed in the future. It's safe to drop it", 21, 1},
 			ValidationWarning{"", "dependsOn.open", "This key is DEPRECATED and will be removed in the future. It's safe to drop it", 98, 3},
+			ValidationWarning{"", "IT", "This key is DEPRECATED and will be removed in the future. It's safe to drop it", 114, 1},
 		},
 		"landingURL_invalid.yml": ValidationResults{
 			ValidationError{"", "landingURL", "landingURL must be an HTTP URL", 8, 1},
@@ -163,6 +166,7 @@ func TestInvalidTestcasesV0(t *testing.T) {
 			ValidationWarning{"", "usedBy", "This key is DEPRECATED and will be removed in the future. It's safe to drop it", 21, 1},
 			ValidationWarning{"", "description.en.videos", "This key is DEPRECATED and will be removed in the future. Link videos from the documentation or the website instead", 62, 5},
 			ValidationWarning{"", "dependsOn.open", "This key is DEPRECATED and will be removed in the future. It's safe to drop it", 102, 3},
+			ValidationWarning{"", "IT", "This key is DEPRECATED and will be removed in the future. It's safe to drop it", 118, 1},
 		},
 
 		// isBasedOn
@@ -584,14 +588,17 @@ func TestInvalidTestcasesV0(t *testing.T) {
 		// it.*
 		"it_countryExtensionVersion_invalid.yml": ValidationResults{
 			ValidationError{"", "IT.countryExtensionVersion", "countryExtensionVersion must be one of the following: \"0.2\" or \"1.0\"", 12, 3},
+			ValidationWarning{"", "IT", "This key is DEPRECATED and will be removed in the future. It's safe to drop it", 11, 1},
 		},
 		"it_riuso_codiceIPA_invalid.yml": ValidationResults{
 			ValidationError{"", "IT.riuso.codiceIPA", "codiceIPA must be a valid Italian Public Administration Code (iPA) (see https://github.com/publiccodeyml/italian-organizations-ipa-vocabulary)", 55, 5},
+			ValidationWarning{"", "IT", "This key is DEPRECATED and will be removed in the future. It's safe to drop it", 53, 1},
 		},
 		"it_IT_duplicated.yml": ValidationResults{
 			ValidationWarning{"", "usedBy", "This key is DEPRECATED and will be removed in the future. It's safe to drop it", 19, 1},
 			ValidationWarning{"", "description.en.videos", "This key is DEPRECATED and will be removed in the future. Link videos from the documentation or the website instead", 60, 5},
 			ValidationWarning{"", "dependsOn.open", "This key is DEPRECATED and will be removed in the future. It's safe to drop it", 85, 3},
+			ValidationWarning{"", "IT", "This key is DEPRECATED and will be removed in the future. It's safe to drop it", 105, 1},
 			ValidationWarning{"", "it", "Lowercase country codes are DEPRECATED and will be removed in the future. Use 'IT' instead", 114, 1},
 			ValidationError{"", "it", "'IT' key already present. Remove this key", 114, 1},
 		},
@@ -679,9 +686,11 @@ func TestValidWithWarningsTestcasesV0(t *testing.T) {
 			ValidationWarning{"", "outputTypes", "This key is DEPRECATED and will be removed in the future. It's safe to drop it", 50, 1},
 		},
 		"valid_with_it_conforme_gdpr.yml": ValidationResults{
+			ValidationWarning{"", "IT", "This key is DEPRECATED and will be removed in the future. It's safe to drop it", 101, 1},
 			ValidationWarning{"", "IT.conforme.gdpr", "This key is DEPRECATED and will be removed in the future. Add a 'supports' entry with id 'alias:gdpr' instead", 108, 5},
 		},
 		"valid_with_it_conforme.yml": ValidationResults{
+			ValidationWarning{"", "IT", "This key is DEPRECATED and will be removed in the future. It's safe to drop it", 101, 1},
 			ValidationWarning{"", "IT.conforme", "This key is DEPRECATED and will be removed in the future. It's safe to drop it", 103, 3},
 		},
 		"valid_with_country_specific_section_downcase.yml": ValidationResults{
@@ -715,6 +724,7 @@ func TestValidWithWarningsTestcasesV0(t *testing.T) {
 			ValidationWarning{"", "description.en-GB.videos", "This key is DEPRECATED and will be removed in the future. Link videos from the documentation or the website instead", 37, 5},
 		},
 		"valid_with_IT_piattaforme.yml": ValidationResults{
+			ValidationWarning{"", "IT", "This key is DEPRECATED and will be removed in the future. It's safe to drop it", 215, 1},
 			ValidationWarning{"", "IT.piattaforme.spid", "This key is DEPRECATED and will be removed in the future. Add a 'supports' entry with id 'alias:spid' instead", 217, 5},
 			ValidationWarning{"", "IT.piattaforme.pagopa", "This key is DEPRECATED and will be removed in the future. Add a 'supports' entry with id 'alias:pagopa' instead", 218, 5},
 			ValidationWarning{"", "IT.piattaforme.cie", "This key is DEPRECATED and will be removed in the future. Add a 'supports' entry with id 'alias:cie' instead", 219, 5},
@@ -722,7 +732,17 @@ func TestValidWithWarningsTestcasesV0(t *testing.T) {
 			ValidationWarning{"", "IT.piattaforme.io", "This key is DEPRECATED and will be removed in the future. Add a 'supports' entry with id 'alias:io' instead", 221, 5},
 		},
 		"valid_with_IT_riuso_codiceIPA.yml": ValidationResults{
+			ValidationWarning{"", "IT", "This key is DEPRECATED and will be removed in the future. It's safe to drop it", 101, 1},
 			ValidationWarning{"", "IT.riuso.codiceIPA", "This key is DEPRECATED and will be removed in the future. Use 'organisation.uri' and set it to 'urn:x-italian-pa:pcm' instead", 103, 5},
+		},
+		"valid_with_country_specific_section_uppercase.yml": ValidationResults{
+			ValidationWarning{"", "IT", "This key is DEPRECATED and will be removed in the future. It's safe to drop it", 90, 1},
+		},
+		"countryExtensionVersion_1.0.yml": ValidationResults{
+			ValidationWarning{"", "IT", "This key is DEPRECATED and will be removed in the future. It's safe to drop it", 90, 1},
+		},
+		"valid_no_it_conforme.yml": ValidationResults{
+			ValidationWarning{"", "IT", "This key is DEPRECATED and will be removed in the future. It's safe to drop it", 90, 1},
 		},
 	}
 

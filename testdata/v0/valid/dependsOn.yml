@@ -90,12 +90,3 @@ dependsOn: # List of dependencies. The only mandatory list is the proprietary on
       optional: true
     - name: NFC Reader2
       optional: true
-
-IT:
-  countryExtensionVersion: "0.2"
-
-  piattaforme:
-    spid: false
-    pagopa: false
-    cie: false
-    anpr: false

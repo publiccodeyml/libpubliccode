@@ -60,7 +60,7 @@ dockers_v2:
   - id: publiccode-parser
     ids: [publiccode-parser]
     dockerfile: Dockerfile.goreleaser
-    images: [publiccodeyml/libpubliccode]
+    images: [publiccodeyml/libpubliccode, ghcr.io/publiccodeyml/libpubliccode]
     tags:
       - "{{ .Tag }}"
       - latest
@@ -76,7 +76,7 @@ dockers_v2:
   - id: publiccode-parser-amd64
     ids: [publiccode-parser]
     dockerfile: Dockerfile.goreleaser
-    images: [publiccodeyml/libpubliccode]
+    images: [publiccodeyml/libpubliccode, ghcr.io/publiccodeyml/libpubliccode]
     tags: ["{{ .Tag }}-amd64"]
     platforms: [linux/amd64]
     disable: "{{ .IsSnapshot }}"
@@ -86,7 +86,7 @@ dockers_v2:
   - id: publiccode-parser-arm64
     ids: [publiccode-parser]
     dockerfile: Dockerfile.goreleaser
-    images: [publiccodeyml/libpubliccode]
+    images: [publiccodeyml/libpubliccode, ghcr.io/publiccodeyml/libpubliccode]
     tags: ["{{ .Tag }}-arm64"]
     platforms: [linux/arm64]
     disable: "{{ .IsSnapshot }}"

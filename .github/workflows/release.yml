@@ -13,7 +13,7 @@ jobs:
     permissions:
       # To upload archives as GitHub Releases
       contents: write
-      # To push Docker images
+      # To push Docker images to GHCR
       packages: write
       # To sign the provenance attestation for the release archives
       id-token: write
@@ -45,6 +45,14 @@ jobs:
           DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
         run: |
           echo "${DOCKERHUB_TOKEN}" | docker login --username "${DOCKERHUB_USERNAME}" --password-stdin
+
+      - name: GHCR Login
+        if: success() && startsWith(github.ref, 'refs/tags/v')
+        env:
+          GHCR_USERNAME: ${{ github.actor }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "${GHCR_TOKEN}" | docker login ghcr.io --username "${GHCR_USERNAME}" --password-stdin
 
       - name: Install Syft
         uses: anchore/sbom-action/download-syft@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3

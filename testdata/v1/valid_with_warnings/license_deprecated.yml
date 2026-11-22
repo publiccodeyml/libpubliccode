@@ -1,0 +1,28 @@
+publiccodeYmlVersion: "1"
+name: Firefax
+url: https://example.com/firefax.git
+softwareType: standalone/desktop
+platforms:
+  - linux
+  - windows
+  - mac
+developmentStatus: stable
+description:
+  en:
+    shortDescription: Send and receive faxes from the desktop
+    longDescription: >
+      Firefax lets you send and receive faxes from a desktop computer
+      without a fax machine. You can search received faxes in an archive,
+      schedule outgoing faxes and track their delivery.
+legal:
+  license: AGPL-3.0 OR MIT # AGPL-3.0 is deprecated even when combined with a current identifier.
+maintenance:
+  type: community
+  contacts:
+    - name: Jane Doe
+localisation:
+  localisationReady: true
+  availableLanguages:
+    - en
+    - it
+    - fr

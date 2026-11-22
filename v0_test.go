@@ -18,6 +18,14 @@ func TestValidWithWarningTestcasesV0_NoNetwork(t *testing.T) {
 			ValidationWarning{File: "", Key: "legal.authorsFile", Description: "This key is DEPRECATED and will be removed in the future. It's safe to drop it", Line: 63, Column: 3},
 			ValidationWarning{File: "", Key: "IT", Description: "This key is DEPRECATED and will be removed in the future. Migrate its keys as their warnings say, then drop it", Line: 95, Column: 1},
 		},
+		"license_deprecated.yml": ValidationResults{
+			ValidationWarning{Key: "legal.license", Description: "'GPL-3.0' is a DEPRECATED SPDX license identifier. Use 'GPL-3.0-only' or 'GPL-3.0-or-later' instead", Line: 39, Column: 3},
+		},
+		"license_deprecated_expression.yml": ValidationResults{
+			ValidationWarning{Key: "legal.license", Description: "'AGPL-3.0' is a DEPRECATED SPDX license identifier. Use 'AGPL-3.0-only' or 'AGPL-3.0-or-later' instead", Line: 39, Column: 3},
+			ValidationWarning{Key: "legal.license", Description: "'GPL-2.0' is a DEPRECATED SPDX license identifier. Use 'GPL-2.0-only' or 'GPL-2.0-or-later' instead", Line: 39, Column: 3},
+			ValidationWarning{Key: "legal.license", Description: "'eCos-2.0' is a DEPRECATED SPDX license identifier. Use its replacement from https://spdx.org/licenses instead", Line: 39, Column: 3},
+		},
 	}
 
 	dir := "testdata/v0/valid_with_warnings/no-network/"

@@ -334,6 +334,8 @@ func validateFieldsV0(publiccode PublicCode, parser *Parser, network bool, baseU
 		}
 	}
 
+	vr = append(vr, deprecatedLicenseWarnings("legal.license", publiccodev0.Legal.License)...)
+
 	if len(vr) == 0 {
 		return nil
 	}
@@ -463,6 +465,8 @@ func validateFieldsV1(publiccode PublicCode, parser *Parser, network bool, baseU
 			}
 		}
 	}
+
+	vr = append(vr, deprecatedLicenseWarnings("legal.license", publiccodev1.Legal.License)...)
 
 	if len(vr) == 0 {
 		return nil

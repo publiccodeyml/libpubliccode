@@ -283,7 +283,7 @@ func TestParseStreamVersion06(t *testing.T) {
 				t.Fatal("expected a parsed document")
 			}
 			expected := ValidationResults{
-				ValidationWarning{"", "publiccodeYmlVersion", "v" + version + " is not the latest version, use '0'. Parsing this file as v0.8.", 1, 1},
+				ValidationWarning{Key: "publiccodeYmlVersion", Description: "v" + version + " is not the latest version, use '0'. Parsing this file as v0.8.", Line: 1, Column: 1},
 			}
 			if !reflect.DeepEqual(err, expected) {
 				t.Fatalf("unexpected diagnostics: got %#v, want %#v", err, expected)

@@ -492,7 +492,7 @@ func (p *Parser) parseAndValidate(in io.Reader, fileURL *url.URL) (PublicCode, e
 				Description: fmt.Sprintf("failed to get raw URL for code repository at %s: %s", publiccode.Url(), err),
 				Line:        line,
 				Column:      column,
-			})
+			}.withCause(err))
 
 			// Return early because proceeding with no base URL would result in a lot
 			// of duplicate errors stemming from its absence.

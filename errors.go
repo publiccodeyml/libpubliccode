@@ -2,12 +2,29 @@ package publiccode
 
 import (
 	"cmp"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"net/url"
 	"slices"
 	"strings"
+
+	"github.com/publiccodeyml/libpubliccode/v5/internal/httpclient"
+)
+
+// Causes of a failed network check. A [ValidationError] that reports an
+// unreachable URL, logo or screenshot unwraps to one of them when the check
+// failed for a reason that says nothing about the value, so callers can
+// tell it apart with errors.Is and try the file again later.
+// [ValidationResults] does not unwrap, so check each of its elements.
+var (
+	// ErrRateLimited means the server kept rate limiting the request, with
+	// a 429 or a rate limit 403, after the parser's retries.
+	ErrRateLimited = errors.New("rate limited")
+	// ErrTimeout means the request did not complete within the parser's
+	// timeout or the caller's deadline.
+	ErrTimeout = errors.New("timed out")
 )
 
 // ParseError is generic parse error.
@@ -32,6 +49,9 @@ type ValidationError struct {
 	Description string `json:"description"`
 	Line        int    `json:"line"`
 	Column      int    `json:"column"`
+
+	// cause is ErrRateLimited, ErrTimeout or nil.
+	cause error
 }
 
 func (e ValidationError) Error() string {
@@ -41,6 +61,12 @@ func (e ValidationError) Error() string {
 	}
 
 	return fmt.Sprintf("%s:%d:%d: error: %s%s", e.fileName(), e.Line, e.Column, key, e.Description)
+}
+
+// Unwrap returns [ErrRateLimited] or [ErrTimeout] when e reports a network
+// check that failed for that reason, and nil otherwise.
+func (e ValidationError) Unwrap() error {
+	return e.cause
 }
 
 func (e ValidationError) MarshalJSON() ([]byte, error) {
@@ -70,6 +96,33 @@ func newValidationError(key string, description string) ValidationError {
 
 func newValidationErrorf(key string, description string, args ...any) ValidationError {
 	return newValidationError(key, fmt.Sprintf(description, args...))
+}
+
+// withCause records why the network check behind e failed, when err says
+// it was rate limited or timed out.
+func (e ValidationError) withCause(err error) ValidationError {
+	e.cause = networkCause(err)
+
+	return e
+}
+
+func networkCause(err error) error {
+	if errors.Is(err, httpclient.ErrRateLimited) {
+		return ErrRateLimited
+	}
+
+	if errors.Is(err, context.DeadlineExceeded) {
+		return ErrTimeout
+	}
+
+	if timeout, ok := errors.AsType[interface {
+		error
+		Timeout() bool
+	}](err); ok && timeout.Timeout() {
+		return ErrTimeout
+	}
+
+	return nil
 }
 
 // ValidationWarning reports a condition that does not make a publiccode.yml file
@@ -162,7 +215,7 @@ func position(err error) (int, int) {
 // newUnreachableError reports that the URL in key did not answer. err
 // gives the cause and does not name the URL, so the URL appears once.
 func newUnreachableError(key string, u *URL, err error) ValidationError {
-	return newValidationErrorf(key, "'%s' not reachable: %s", (*url.URL)(u).String(), err.Error())
+	return newValidationErrorf(key, "'%s' not reachable: %s", (*url.URL)(u).String(), err.Error()).withCause(err)
 }
 
 // newNotImageError reports that the file value in key is not an image.
@@ -173,5 +226,5 @@ func newNotImageError(key string, value string, err error) ValidationError {
 		err = dlErr.Err
 	}
 
-	return newValidationErrorf(key, "'%s' is not an image: %s", value, err.Error())
+	return newValidationErrorf(key, "'%s' is not an image: %s", value, err.Error()).withCause(err)
 }

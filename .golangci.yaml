@@ -121,6 +121,7 @@ linters:
       # Test tables and helpers follow the existing test layout.
       - path: _test\.go$
         linters:
+          - dupl
           - paralleltest
           - lll
           - wsl_v5

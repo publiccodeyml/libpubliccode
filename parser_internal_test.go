@@ -83,8 +83,8 @@ func TestDecodeReportsEveryUnknownKey(t *testing.T) {
 legal: {license: MIT, b: 1, a: 2}
 `,
 			want: ValidationResults{
-				ValidationError{"", "legal.b", `unknown field "b"`, 2, 1},
-				ValidationError{"", "legal.a", `unknown field "a"`, 2, 1},
+				ValidationError{File: "", Key: "legal.b", Description: `unknown field "b"`, Line: 2, Column: 1},
+				ValidationError{File: "", Key: "legal.a", Description: `unknown field "a"`, Line: 2, Column: 1},
 			},
 		},
 		"key of an anchor used twice": {
@@ -94,7 +94,7 @@ fundedBy:
   - *org
 `,
 			want: ValidationResults{
-				ValidationError{"", "fundedBy[0].foo", `unknown field "foo"`, 3, 1},
+				ValidationError{File: "", Key: "fundedBy[0].foo", Description: `unknown field "foo"`, Line: 3, Column: 1},
 			},
 		},
 		"key brought in by a merge key": {
@@ -105,9 +105,9 @@ maintenance:
   baz: 2
 `,
 			want: ValidationResults{
-				ValidationError{"", "x", `unknown field "x"`, 2, 1},
-				ValidationError{"", "maintenance.bar", `unknown field "bar"`, 2, 1},
-				ValidationError{"", "maintenance.baz", `unknown field "baz"`, 5, 1},
+				ValidationError{File: "", Key: "x", Description: `unknown field "x"`, Line: 2, Column: 1},
+				ValidationError{File: "", Key: "maintenance.bar", Description: `unknown field "bar"`, Line: 2, Column: 1},
+				ValidationError{File: "", Key: "maintenance.baz", Description: `unknown field "baz"`, Line: 5, Column: 1},
 			},
 		},
 		"anchor holding an alias of itself": {
@@ -116,8 +116,8 @@ fundedBy: &x [*x]
 foo: 1
 `,
 			want: ValidationResults{
-				ValidationError{"", "foo", `unknown field "foo"`, 3, 1},
-				ValidationError{"", "fundedBy", "wrong type for this field", 2, 1},
+				ValidationError{File: "", Key: "foo", Description: `unknown field "foo"`, Line: 3, Column: 1},
+				ValidationError{File: "", Key: "fundedBy", Description: "wrong type for this field", Line: 2, Column: 1},
 			},
 		},
 		"mapping merging an alias of itself": {
@@ -125,7 +125,7 @@ foo: 1
 maintenance: &x {type: internal, foo: 1, <<: *x}
 `,
 			want: ValidationResults{
-				ValidationError{"", "maintenance.foo", `unknown field "foo"`, 2, 1},
+				ValidationError{File: "", Key: "maintenance.foo", Description: `unknown field "foo"`, Line: 2, Column: 1},
 				newValidationError("", "cannot find anchor by alias name x"),
 			},
 		},
@@ -137,10 +137,10 @@ maintenance: &x {type: internal, foo: 1, <<: *x}
 !!str 4: 4
 `,
 			want: ValidationResults{
-				ValidationError{"", "zzTagged", `unknown field "zzTagged"`, 2, 1},
-				ValidationError{"", "zzQuoted", `unknown field "zzQuoted"`, 3, 1},
-				ValidationError{"", "zzAnchored", `unknown field "zzAnchored"`, 4, 1},
-				ValidationError{"", "4", `unknown field "4"`, 5, 1},
+				ValidationError{File: "", Key: "zzTagged", Description: `unknown field "zzTagged"`, Line: 2, Column: 1},
+				ValidationError{File: "", Key: "zzQuoted", Description: `unknown field "zzQuoted"`, Line: 3, Column: 1},
+				ValidationError{File: "", Key: "zzAnchored", Description: `unknown field "zzAnchored"`, Line: 4, Column: 1},
+				ValidationError{File: "", Key: "4", Description: `unknown field "4"`, Line: 5, Column: 1},
 			},
 		},
 		"key next to a wrong type": {
@@ -149,8 +149,8 @@ name: [a]
 foo: 1
 `,
 			want: ValidationResults{
-				ValidationError{"", "foo", `unknown field "foo"`, 3, 1},
-				ValidationError{"", "name", "wrong type for this field", 2, 1},
+				ValidationError{File: "", Key: "foo", Description: `unknown field "foo"`, Line: 3, Column: 1},
+				ValidationError{File: "", Key: "name", Description: "wrong type for this field", Line: 2, Column: 1},
 			},
 		},
 	}

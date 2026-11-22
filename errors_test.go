@@ -1,11 +1,15 @@
 package publiccode
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net"
 	"net/url"
 	"testing"
+
+	"github.com/publiccodeyml/libpubliccode/v5/internal/httpclient"
 )
 
 func TestParseErrorError(t *testing.T) {
@@ -177,6 +181,27 @@ func TestValidationResultsHasErrors(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := tt.results.HasErrors(); got != tt.want {
 				t.Errorf("HasErrors() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestNetworkCause(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		err  error
+		want error
+	}{
+		{"rate limited", fmt.Errorf("downloading: %w", httpclient.ErrRateLimited), ErrRateLimited},
+		{"deadline", fmt.Errorf("requesting: %w", context.DeadlineExceeded), ErrTimeout},
+		{"net timeout", &net.DNSError{Err: "i/o timeout", IsTimeout: true}, ErrTimeout},
+		{"not found", fmt.Errorf("downloading: %w", httpclient.ErrNotFound), nil},
+		{"refused", &net.OpError{Op: "dial", Err: errors.New("connection refused")}, nil},
+		{"nil", nil, nil},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := newValidationError("url", "not reachable").withCause(tc.err).Unwrap(); !errors.Is(got, tc.want) {
+				t.Errorf("Unwrap() = %v, want %v", got, tc.want)
 			}
 		})
 	}

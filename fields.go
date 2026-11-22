@@ -58,7 +58,7 @@ func validateFieldsV0(publiccode PublicCode, parser *Parser, network bool, baseU
 			if u != nil {
 				validLogo, err := parser.validLogo(*u, network)
 				if !validLogo {
-					vr = append(vr, newValidationError("logo", err.Error()))
+					vr = append(vr, newValidationError("logo", err.Error()).withCause(err))
 				}
 			}
 		}
@@ -77,7 +77,7 @@ func validateFieldsV0(publiccode PublicCode, parser *Parser, network bool, baseU
 			if u != nil {
 				validLogo, err := parser.validLogo(*u, network)
 				if !validLogo {
-					vr = append(vr, newValidationError("monochromeLogo", err.Error()))
+					vr = append(vr, newValidationError("monochromeLogo", err.Error()).withCause(err))
 				}
 			}
 		}
@@ -384,7 +384,7 @@ func validateFieldsV1(publiccode PublicCode, parser *Parser, network bool, baseU
 			if u != nil {
 				validLogo, err := parser.validLogo(*u, network)
 				if !validLogo {
-					vr = append(vr, newValidationError("logo", err.Error()))
+					vr = append(vr, newValidationError("logo", err.Error()).withCause(err))
 				}
 			}
 		}

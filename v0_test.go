@@ -616,6 +616,9 @@ func TestInvalidTestcasesV0(t *testing.T) {
 		},
 
 		// misc
+		"aliases_nested.yml": ValidationResults{
+			ValidationError{"", "zl7", "YAML aliases expand to more than 10000 nodes", 61, 16},
+		},
 		"file_encoding.yml": ValidationResults{ValidationError{"", "", "Invalid UTF-8", 0, 0}},
 		"invalid_yaml.yml":  ValidationResults{ValidationError{"", "", "value is not allowed in this context. map key-value is pre-defined", 38, 1}},
 		"mostly_empty.yml": ValidationResults{

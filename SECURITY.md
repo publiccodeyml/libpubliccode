@@ -2,6 +2,6 @@
 
 ## Reporting a vulnerability
 
-Report security vulnerabilities via [GitHub private vulnerability reporting](https://github.com/publiccodeyml/libpubliccode/security/advisories/new).
+For severe vulnerabilities, please consider using [GitHub private vulnerability reporting](https://github.com/publiccodeyml/libpubliccode/security/advisories/new) as a courtesy, so we can work on a fix before the details become public.
 
-Do not open a public issue.
+Other vulnerabilities can be reported in a public issue.

@@ -73,6 +73,103 @@ name:
 	}
 }
 
+func TestDecodeReportsEveryUnknownKey(t *testing.T) {
+	tests := map[string]struct {
+		yaml string
+		want ValidationResults
+	}{
+		"keys in a flow mapping": {
+			yaml: `publiccodeYmlVersion: "0"
+legal: {license: MIT, b: 1, a: 2}
+`,
+			want: ValidationResults{
+				ValidationError{"", "legal.b", `unknown field "b"`, 2, 1},
+				ValidationError{"", "legal.a", `unknown field "a"`, 2, 1},
+			},
+		},
+		"key of an anchor used twice": {
+			yaml: `publiccodeYmlVersion: "0"
+fundedBy:
+  - &org {uri: "urn:x-test:a", foo: 1}
+  - *org
+`,
+			want: ValidationResults{
+				ValidationError{"", "fundedBy[0].foo", `unknown field "foo"`, 3, 1},
+			},
+		},
+		"key brought in by a merge key": {
+			yaml: `publiccodeYmlVersion: "0"
+x: &base {type: internal, bar: 1}
+maintenance:
+  <<: *base
+  baz: 2
+`,
+			want: ValidationResults{
+				ValidationError{"", "x", `unknown field "x"`, 2, 1},
+				ValidationError{"", "maintenance.bar", `unknown field "bar"`, 2, 1},
+				ValidationError{"", "maintenance.baz", `unknown field "baz"`, 5, 1},
+			},
+		},
+		"anchor holding an alias of itself": {
+			yaml: `publiccodeYmlVersion: "0"
+fundedBy: &x [*x]
+foo: 1
+`,
+			want: ValidationResults{
+				ValidationError{"", "foo", `unknown field "foo"`, 3, 1},
+				ValidationError{"", "fundedBy", "wrong type for this field", 2, 1},
+			},
+		},
+		"mapping merging an alias of itself": {
+			yaml: `publiccodeYmlVersion: "0"
+maintenance: &x {type: internal, foo: 1, <<: *x}
+`,
+			want: ValidationResults{
+				ValidationError{"", "maintenance.foo", `unknown field "foo"`, 2, 1},
+				newValidationError("", "cannot find anchor by alias name x"),
+			},
+		},
+		"tagged, quoted and anchored keys": {
+			yaml: `publiccodeYmlVersion: "0"
+!!str zzTagged: 1
+"zzQuoted": 2
+&k zzAnchored: 3
+!!str 4: 4
+`,
+			want: ValidationResults{
+				ValidationError{"", "zzTagged", `unknown field "zzTagged"`, 2, 1},
+				ValidationError{"", "zzQuoted", `unknown field "zzQuoted"`, 3, 1},
+				ValidationError{"", "zzAnchored", `unknown field "zzAnchored"`, 4, 1},
+				ValidationError{"", "4", `unknown field "4"`, 5, 1},
+			},
+		},
+		"key next to a wrong type": {
+			yaml: `publiccodeYmlVersion: "0"
+name: [a]
+foo: 1
+`,
+			want: ValidationResults{
+				ValidationError{"", "foo", `unknown field "foo"`, 3, 1},
+				ValidationError{"", "name", "wrong type for this field", 2, 1},
+			},
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			file, err := parser.ParseBytes([]byte(test.yaml), 0)
+			if err != nil {
+				t.Fatalf("unexpected parse error: %v", err)
+			}
+
+			got := decode([]byte(test.yaml), &PublicCodeV0{}, file)
+			if got.Error() != test.want.Error() {
+				t.Errorf("got:\n%v\nwant:\n%v", got, test.want)
+			}
+		})
+	}
+}
+
 func TestToURLLocalPath(t *testing.T) {
 	// toURL with a local file path should return a file:// URL.
 	u, err := toURL("./testdata/v0/valid/valid.yml")

@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	neturl "net/url"
 	"strconv"
 	"time"
 )
@@ -66,7 +67,7 @@ func New(doer Doer) *Client {
 // it waits and tries again: for as long as Retry-After says, until the
 // time in X-Ratelimit-Reset, or with an exponential backoff from one
 // minute when the server gave no time. A wait the server asks for is
-// capped at 30 seconds.
+// capped at 30 seconds. Errors give the cause without naming url.
 func (c *Client) Get(url string, headers map[string]string) ([]byte, error) {
 	return c.GetWithContext(context.Background(), url, headers)
 }
@@ -118,7 +119,13 @@ func (c *Client) do(ctx context.Context, url string, headers map[string]string) 
 
 	resp, err := c.doer.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("requesting %s: %w", url, err)
+		// *url.Error names the method and the URL. The caller names the
+		// URL in its own message, so return only the cause.
+		if urlErr, ok := errors.AsType[*neturl.Error](err); ok {
+			return nil, urlErr.Err
+		}
+
+		return nil, fmt.Errorf("sending the request: %w", err)
 	}
 
 	return resp, nil

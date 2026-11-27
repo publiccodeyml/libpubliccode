@@ -808,7 +808,7 @@ func TestRelativePathsOrURLs(t *testing.T) {
 		// Remote publiccode.yml and relative path in screenshots:
 		// should look for the screenshot remotely relative to this URL
 		{"https://raw.githubusercontent.com/italia/publiccode-parser-go/2a1f25a36e0f2ab2d71efb67db8b66ff00573fbe/testdata/v0/invalid/description_en_screenshots_missing_file.yml", ValidationResults{
-			ValidationError{"", "description.en.screenshots[0]", "'no_such_file.png' is not an image: HTTP GET failed for https://raw.githubusercontent.com/italia/publiccode-parser-go/2a1f25a36e0f2ab2d71efb67db8b66ff00573fbe/testdata/v0/invalid/no_such_file.png: not found", 42, 9},
+			ValidationError{"", "description.en.screenshots[0]", "'no_such_file.png' is not an image: downloading https://raw.githubusercontent.com/italia/publiccode-parser-go/2a1f25a36e0f2ab2d71efb67db8b66ff00573fbe/testdata/v0/invalid/no_such_file.png: not found", 42, 9},
 		}},
 
 		// Local publiccode.yml and relative path in screenshot:

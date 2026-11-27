@@ -2,6 +2,8 @@ package publiccode
 
 import (
 	"encoding/json"
+	"errors"
+	"net/url"
 	"testing"
 )
 
@@ -119,5 +121,36 @@ func TestValidationWarningErrorEmptyKey(t *testing.T) {
 	want := "publiccode.yml:5:6: warning: minor issue"
 	if got != want {
 		t.Errorf("got %q, want %q", got, want)
+	}
+}
+
+func TestNewUnreachableErrorNamesURLOnce(t *testing.T) {
+	u, _ := url.Parse("https://example.invalid/x/y.git")
+	got := newUnreachableError("url", (*URL)(u), errors.New("no such host"))
+
+	want := "'https://example.invalid/x/y.git' not reachable: no such host"
+	if got.Description != want {
+		t.Errorf("Description = %q, want %q", got.Description, want)
+	}
+}
+
+func TestNewNotImageErrorNamesURLOnce(t *testing.T) {
+	const raw = "https://example.com/raw/shot.png"
+
+	tests := []struct {
+		value string
+		want  string
+	}{
+		{raw, "'" + raw + "' is not an image: not found"},
+		{"shot.png", "'shot.png' is not an image: downloading " + raw + ": not found"},
+	}
+
+	for _, tt := range tests {
+		err := &downloadError{URL: raw, Err: errors.New("not found")}
+
+		got := newNotImageError("screenshots[0]", tt.value, err)
+		if got.Description != tt.want {
+			t.Errorf("Description = %q, want %q", got.Description, tt.want)
+		}
 	}
 }

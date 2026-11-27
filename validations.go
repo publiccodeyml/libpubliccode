@@ -18,6 +18,7 @@ import (
 	"runtime"
 	"slices"
 	"strings"
+	"sync"
 
 	"github.com/publiccodeyml/libpubliccode/v5/data"
 	netutil "github.com/publiccodeyml/libpubliccode/v5/internal"
@@ -28,8 +29,6 @@ func init() {
 }
 
 var errMissingURLScheme = errors.New("missing URL scheme")
-
-var oembedSchemes []*regexp.Regexp
 
 // downloadError is a failed request for a file the manifest points to.
 // URL is the address requested, which may be a raw URL resolved from a
@@ -47,18 +46,26 @@ func (e *downloadError) Unwrap() error {
 	return e.Err
 }
 
-func init() {
+// oembedSchemes compiles the oEmbed provider patterns on the first video
+// check, so importing the package doesn't pay for them.
+var oembedSchemes = sync.OnceValue(compileOembedSchemes)
+
+func compileOembedSchemes() []*regexp.Regexp {
 	var schemes []string
 
 	if err := json.Unmarshal(data.OembedSchemes, &schemes); err != nil {
 		panic("failed to parse oEmbed schemes: " + err.Error()) //nolint:forbidigo,lll // embedded at compile time, a failure here is a programming error
 	}
 
+	patterns := make([]*regexp.Regexp, 0, len(schemes))
+
 	for _, scheme := range schemes {
 		pattern := "^" + regexp.QuoteMeta(scheme) + "$"
 		pattern = strings.ReplaceAll(pattern, `\*`, `.*`)
-		oembedSchemes = append(oembedSchemes, regexp.MustCompile(pattern))
+		patterns = append(patterns, regexp.MustCompile(pattern))
 	}
+
+	return patterns
 }
 
 func getBasicAuth(domain Domain) string {
@@ -244,7 +251,7 @@ func (p *Parser) validLogo(u url.URL, network bool) (bool, error) {
 }
 
 func matchesOembedScheme(link string) bool {
-	for _, re := range oembedSchemes {
+	for _, re := range oembedSchemes() {
 		if re.MatchString(link) {
 			return true
 		}

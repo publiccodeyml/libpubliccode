@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/url"
 	"slices"
 	"strings"
 )
@@ -145,4 +146,21 @@ func position(err error) (int, int) {
 	}
 
 	return 0, 0
+}
+
+// newUnreachableError reports that the URL in key did not answer. err
+// gives the cause and does not name the URL, so the URL appears once.
+func newUnreachableError(key string, u *URL, err error) ValidationError {
+	return newValidationErrorf(key, "'%s' not reachable: %s", (*url.URL)(u).String(), err.Error())
+}
+
+// newNotImageError reports that the file value in key is not an image.
+// When the request failed for the URL value itself, the URL is named only
+// once. A URL resolved from a relative path stays in the message.
+func newNotImageError(key string, value string, err error) ValidationError {
+	if dlErr, ok := errors.AsType[*downloadError](err); ok && dlErr.URL == value {
+		err = dlErr.Err
+	}
+
+	return newValidationErrorf(key, "'%s' is not an image: %s", value, err.Error())
 }

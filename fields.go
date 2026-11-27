@@ -29,7 +29,7 @@ func validateFieldsV0(publiccode PublicCode, parser *Parser, network bool, baseU
 
 	if checksNetwork && publiccodev0.URL != nil {
 		if reachable, err := parser.isReachable(*(*url.URL)(publiccodev0.URL)); !reachable {
-			vr = append(vr, newValidationErrorf("url", "'%s' not reachable: %s", publiccodev0.URL, err.Error()))
+			vr = append(vr, newUnreachableError("url", publiccodev0.URL, err))
 		}
 
 		if !parser.isRepo((*url.URL)(publiccodev0.URL)) {
@@ -39,19 +39,13 @@ func validateFieldsV0(publiccode PublicCode, parser *Parser, network bool, baseU
 
 	if checksNetwork && publiccodev0.LandingURL != nil {
 		if reachable, err := parser.isReachable(*(*url.URL)(publiccodev0.LandingURL)); !reachable {
-			vr = append(vr, newValidationErrorf(
-				"landingURL",
-				"'%s' not reachable: %s", publiccodev0.LandingURL, err.Error(),
-			))
+			vr = append(vr, newUnreachableError("landingURL", publiccodev0.LandingURL, err))
 		}
 	}
 
 	if checksNetwork && publiccodev0.Roadmap != nil {
 		if reachable, err := parser.isReachable(*(*url.URL)(publiccodev0.Roadmap)); !reachable {
-			vr = append(vr, newValidationErrorf(
-				"roadmap",
-				"'%s' not reachable: %s", publiccodev0.Roadmap, err.Error(),
-			))
+			vr = append(vr, newUnreachableError("roadmap", publiccodev0.Roadmap, err))
 		}
 	}
 
@@ -213,18 +207,16 @@ func validateFieldsV0(publiccode PublicCode, parser *Parser, network bool, baseU
 
 		if checksNetwork && desc.Documentation != nil {
 			if reachable, err := parser.isReachable(*(*url.URL)(desc.Documentation)); !reachable {
-				vr = append(vr, newValidationErrorf(
-					fmt.Sprintf("description.%s.documentation", lang),
-					"'%s' not reachable: %s", desc.Documentation, err.Error(),
+				vr = append(vr, newUnreachableError(
+					fmt.Sprintf("description.%s.documentation", lang), desc.Documentation, err,
 				))
 			}
 		}
 
 		if checksNetwork && desc.APIDocumentation != nil {
 			if reachable, err := parser.isReachable(*(*url.URL)(desc.APIDocumentation)); !reachable {
-				vr = append(vr, newValidationErrorf(
-					fmt.Sprintf("description.%s.apiDocumentation", lang),
-					"'%s' not reachable: %s", desc.APIDocumentation, err.Error(),
+				vr = append(vr, newUnreachableError(
+					fmt.Sprintf("description.%s.apiDocumentation", lang), desc.APIDocumentation, err,
 				))
 			}
 		}
@@ -238,10 +230,7 @@ func validateFieldsV0(publiccode PublicCode, parser *Parser, network bool, baseU
 				if u != nil {
 					isImage, err := parser.isImageFile(*u, network)
 					if !isImage {
-						vr = append(vr, newValidationErrorf(
-							keyName,
-							"'%s' is not an image: %s", v, err.Error(),
-						))
+						vr = append(vr, newNotImageError(keyName, v, err))
 					}
 				}
 			}
@@ -366,7 +355,7 @@ func validateFieldsV1(publiccode PublicCode, parser *Parser, network bool, baseU
 
 	if checksNetwork && publiccodev1.URL != nil {
 		if reachable, err := parser.isReachable(*(*url.URL)(publiccodev1.URL)); !reachable {
-			vr = append(vr, newValidationErrorf("url", "'%s' not reachable: %s", publiccodev1.URL, err.Error()))
+			vr = append(vr, newUnreachableError("url", publiccodev1.URL, err))
 		}
 
 		if !parser.isRepo((*url.URL)(publiccodev1.URL)) {
@@ -376,19 +365,13 @@ func validateFieldsV1(publiccode PublicCode, parser *Parser, network bool, baseU
 
 	if checksNetwork && publiccodev1.LandingURL != nil {
 		if reachable, err := parser.isReachable(*(*url.URL)(publiccodev1.LandingURL)); !reachable {
-			vr = append(vr, newValidationErrorf(
-				"landingURL",
-				"'%s' not reachable: %s", publiccodev1.LandingURL, err.Error(),
-			))
+			vr = append(vr, newUnreachableError("landingURL", publiccodev1.LandingURL, err))
 		}
 	}
 
 	if checksNetwork && publiccodev1.Roadmap != nil {
 		if reachable, err := parser.isReachable(*(*url.URL)(publiccodev1.Roadmap)); !reachable {
-			vr = append(vr, newValidationErrorf(
-				"roadmap",
-				"'%s' not reachable: %s", publiccodev1.Roadmap, err.Error(),
-			))
+			vr = append(vr, newUnreachableError("roadmap", publiccodev1.Roadmap, err))
 		}
 	}
 
@@ -436,18 +419,16 @@ func validateFieldsV1(publiccode PublicCode, parser *Parser, network bool, baseU
 	for lang, desc := range publiccodev1.Description {
 		if checksNetwork && desc.Documentation != nil {
 			if reachable, err := parser.isReachable(*(*url.URL)(desc.Documentation)); !reachable {
-				vr = append(vr, newValidationErrorf(
-					fmt.Sprintf("description.%s.documentation", lang),
-					"'%s' not reachable: %s", desc.Documentation, err.Error(),
+				vr = append(vr, newUnreachableError(
+					fmt.Sprintf("description.%s.documentation", lang), desc.Documentation, err,
 				))
 			}
 		}
 
 		if checksNetwork && desc.APIDocumentation != nil {
 			if reachable, err := parser.isReachable(*(*url.URL)(desc.APIDocumentation)); !reachable {
-				vr = append(vr, newValidationErrorf(
-					fmt.Sprintf("description.%s.apiDocumentation", lang),
-					"'%s' not reachable: %s", desc.APIDocumentation, err.Error(),
+				vr = append(vr, newUnreachableError(
+					fmt.Sprintf("description.%s.apiDocumentation", lang), desc.APIDocumentation, err,
 				))
 			}
 		}
@@ -461,10 +442,7 @@ func validateFieldsV1(publiccode PublicCode, parser *Parser, network bool, baseU
 				if u != nil {
 					isImage, err := parser.isImageFile(*u, network)
 					if !isImage {
-						vr = append(vr, newValidationErrorf(
-							keyName,
-							"'%s' is not an image: %s", v, err.Error(),
-						))
+						vr = append(vr, newNotImageError(keyName, v, err))
 					}
 				}
 			}

@@ -31,6 +31,22 @@ var errMissingURLScheme = errors.New("missing URL scheme")
 
 var oembedSchemes []*regexp.Regexp
 
+// downloadError is a failed request for a file the manifest points to.
+// URL is the address requested, which may be a raw URL resolved from a
+// relative path, and Err the cause, which does not name it.
+type downloadError struct {
+	URL string
+	Err error
+}
+
+func (e *downloadError) Error() string {
+	return fmt.Sprintf("downloading %s: %v", e.URL, e.Err)
+}
+
+func (e *downloadError) Unwrap() error {
+	return e.Err
+}
+
 func init() {
 	var schemes []string
 
@@ -80,7 +96,8 @@ func getHeaderFromDomain(domain Domain, url string) map[string]string {
 }
 
 // isReachable checks whether the URL resource is reachable.
-// An URL resource is reachable if it returns HTTP 200.
+// An URL resource is reachable if it returns HTTP 200. The error gives the
+// cause and does not name the URL: callers name it.
 func (p *Parser) isReachable(u url.URL) (bool, error) {
 	// Don't check if we are running in WASM because we'd most likely
 	// fail due to CORS errors.
@@ -94,7 +111,7 @@ func (p *Parser) isReachable(u url.URL) (bool, error) {
 
 	_, err := p.httpclient.Get(u.String(), getHeaderFromDomain(p.domain, u.String()))
 	if err != nil {
-		return false, fmt.Errorf("HTTP GET failed for %s: %w", u.String(), err)
+		return false, fmt.Errorf("%w", err)
 	}
 
 	return true, nil
@@ -166,7 +183,12 @@ func (p *Parser) isImageFile(u url.URL, network bool) (bool, error) {
 		return false, fmt.Errorf("invalid file extension for: %s", netutil.DisplayURL(&u)) //nolint:err113,lll // dynamic message with path context
 	}
 
-	return p.fileExists(u, network)
+	exists, err := p.fileExists(u, network)
+	if !exists && u.Scheme != "file" && u.Scheme != "" {
+		return false, &downloadError{URL: netutil.DisplayURL(&u), Err: err}
+	}
+
+	return exists, err
 }
 
 // validLogo returns true if the file path in value is a valid logo.
@@ -206,7 +228,7 @@ func (p *Parser) validLogo(u url.URL, network bool) (bool, error) {
 
 		body, err := p.httpclient.Get(u.String(), getHeaderFromDomain(p.domain, u.String()))
 		if err != nil {
-			return false, fmt.Errorf("downloading %s: %w", u.String(), err)
+			return false, fmt.Errorf("downloading %s: %w", netutil.DisplayURL(&u), err)
 		}
 
 		content = bytes.NewReader(body)

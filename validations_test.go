@@ -112,6 +112,37 @@ func TestIsReachableNon200(t *testing.T) {
 	}
 }
 
+func TestIsReachableErrorOmitsURL(t *testing.T) {
+	srv := httptest.NewServer(http.NotFoundHandler())
+	target := srv.URL + "/path"
+	srv.Close()
+
+	p, _ := NewParser(ParserConfig{AllowNetworkToPrivateHosts: true})
+	parsed, _ := url.Parse(target)
+	reachable, err := p.isReachable(*parsed)
+	if reachable || err == nil {
+		t.Fatalf("expected an unreachable URL, got %v, %v", reachable, err)
+	}
+	// The dial error names the address, as the cause, but not the URL.
+	if strings.Contains(err.Error(), "/path") {
+		t.Errorf("the cause names the URL: %v", err)
+	}
+}
+
+func TestIsImageFileNamesRequestedURL(t *testing.T) {
+	srv := httptest.NewServer(http.NotFoundHandler())
+	defer srv.Close()
+
+	p, _ := NewParser(ParserConfig{AllowNetworkToPrivateHosts: true})
+	parsed, _ := url.Parse(srv.URL + "/shot.png")
+	_, err := p.isImageFile(*parsed, true)
+
+	want := "downloading " + srv.URL + "/shot.png: not found"
+	if err == nil || err.Error() != want {
+		t.Errorf("err = %v, want %q", err, want)
+	}
+}
+
 func TestIsImageFileInvalidExtension(t *testing.T) {
 	p, _ := NewParser(ParserConfig{DisableNetwork: true})
 	u := url.URL{Scheme: "file", Path: "/tmp/test.gif"}

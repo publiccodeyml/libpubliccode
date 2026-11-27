@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	neturl "net/url"
 	"slices"
 	"testing"
 	"time"
@@ -357,5 +358,26 @@ func TestGetCountsBlindRetriesOnTheirOwn(t *testing.T) {
 	}
 	if !slices.Equal(*waits, want) {
 		t.Errorf("waits = %v, want %v", *waits, want)
+	}
+}
+
+type doerFunc func(*http.Request) (*http.Response, error)
+
+func (f doerFunc) Do(req *http.Request) (*http.Response, error) {
+	return f(req)
+}
+
+func TestGetTransportErrorOmitsURL(t *testing.T) {
+	errDial := errors.New("dial tcp: lookup example.invalid: no such host")
+	c := New(doerFunc(func(req *http.Request) (*http.Response, error) {
+		return nil, &neturl.Error{Op: "Get", URL: req.URL.String(), Err: errDial}
+	}))
+
+	_, err := c.Get("https://example.invalid/x/y.git", nil)
+	if !errors.Is(err, errDial) {
+		t.Fatalf("err = %v, want %v", err, errDial)
+	}
+	if err.Error() != errDial.Error() {
+		t.Errorf("err = %q, want only the cause %q", err, errDial)
 	}
 }

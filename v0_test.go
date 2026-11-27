@@ -634,6 +634,14 @@ func TestInvalidTestcasesV0(t *testing.T) {
 		"unknown_field.yml": ValidationResults{
 			ValidationError{"", "foobar", "unknown field \"foobar\"", 10, 1},
 		},
+		"unknown_fields.yml": ValidationResults{
+			ValidationError{"", "zzzTop", "unknown field \"zzzTop\"", 8, 1},
+			ValidationError{"", "description.en-GB.zzzDescription", "unknown field \"zzzDescription\"", 23, 1},
+			ValidationError{"", "maintenance.contacts[0].zzzContact", "unknown field \"zzzContact\"", 51, 1},
+			ValidationError{"", "zzzLast", "unknown field \"zzzLast\"", 58, 1},
+			ValidationError{"", "description", "description must contain more than 0 items", 20, 1},
+			ValidationError{"", "maintenance.type", "type is a required field", 47, 3},
+		},
 	}
 
 	dir := "testdata/v0/invalid/"

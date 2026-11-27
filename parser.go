@@ -11,6 +11,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"reflect"
 	"regexp"
 	"slices"
 	"strings"
@@ -804,42 +805,60 @@ func decode[T any](data []byte, publiccode *T, file *ast.File) (ve ValidationRes
 
 	d := yaml.NewDecoder(bytes.NewReader(data), yaml.DisallowUnknownField())
 
-	if err := d.Decode(publiccode); err != nil {
-		var (
-			unknownErr *yaml.UnknownFieldError
-			yamlErr    yaml.Error
-		)
+	err := d.Decode(publiccode)
+	if err == nil {
+		return ve
+	}
 
-		switch {
-		case errors.As(err, &unknownErr):
-			line := 0
-			if unknownErr.Token != nil {
-				line = unknownErr.Token.Position.Line
-			}
+	// The decoder reports one unknown key at most and stops at the first
+	// error, so look for all of them whatever error it returned.
+	for _, key := range findUnknownKeys(file.Docs[0].Body, reflect.TypeFor[T]()) {
+		ve = append(ve, ValidationError{
+			Key:         key.path,
+			Description: fmt.Sprintf("unknown field %q", key.name),
+			Line:        key.token.Position.Line,
+			Column:      1,
+		})
+	}
 
-			key := findKeyAtLine(file.Docs[0].Body, line, "")
-			ve = append(ve, ValidationError{
-				Key:         key,
-				Description: unknownErr.Message,
-				Line:        line,
-				Column:      1,
-			})
-		case errors.As(err, &yamlErr):
-			line := 0
-			if tok := yamlErr.GetToken(); tok != nil {
-				line = tok.Position.Line
-			}
+	var (
+		unknownErr *yaml.UnknownFieldError
+		yamlErr    yaml.Error
+	)
 
-			key := findKeyAtLine(file.Docs[0].Body, line, "")
-			ve = append(ve, ValidationError{
-				Key:         key,
-				Description: "wrong type for this field",
-				Line:        line,
-				Column:      1,
-			})
-		default:
-			ve = append(ve, newValidationError("", err.Error()))
+	switch {
+	case errors.As(err, &unknownErr):
+		if len(ve) > 0 {
+			break
 		}
+
+		line := 0
+		if unknownErr.Token != nil {
+			line = unknownErr.Token.Position.Line
+		}
+
+		key := findKeyAtLine(file.Docs[0].Body, line, "")
+		ve = append(ve, ValidationError{
+			Key:         key,
+			Description: unknownErr.Message,
+			Line:        line,
+			Column:      1,
+		})
+	case errors.As(err, &yamlErr):
+		line := 0
+		if tok := yamlErr.GetToken(); tok != nil {
+			line = tok.Position.Line
+		}
+
+		key := findKeyAtLine(file.Docs[0].Body, line, "")
+		ve = append(ve, ValidationError{
+			Key:         key,
+			Description: "wrong type for this field",
+			Line:        line,
+			Column:      1,
+		})
+	default:
+		ve = append(ve, newValidationError("", err.Error()))
 	}
 
 	return ve

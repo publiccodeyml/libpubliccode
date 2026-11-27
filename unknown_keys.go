@@ -28,7 +28,7 @@ type unknownKey struct {
 // struct that has one, and picks it by ranging over a map, so it can't tell
 // a user about every unknown key, nor always about the same one.
 type unknownKeyFinder struct {
-	anchors map[string][]*ast.AnchorNode
+	anchors anchorIndex
 	inside  map[ast.Node]bool
 	visited map[visit]bool
 	seen    map[*token.Token]bool
@@ -61,12 +61,11 @@ var nonStringTags = []token.ReservedTagKeyword{
 
 func findUnknownKeys(node ast.Node, typ reflect.Type) []unknownKey {
 	f := unknownKeyFinder{
-		anchors: map[string][]*ast.AnchorNode{},
+		anchors: indexAnchors(node),
 		inside:  map[ast.Node]bool{},
 		visited: map[visit]bool{},
 		seen:    map[*token.Token]bool{},
 	}
-	ast.Walk(&f, node)
 	f.walk(node, typ, "")
 
 	// Keys brought in by merge keys come up where they are merged.
@@ -75,37 +74,6 @@ func findUnknownKeys(node ast.Node, typ reflect.Type) []unknownKey {
 	})
 
 	return f.keys
-}
-
-// Visit collects the anchors of the document in source order, including
-// those under unknown keys, which the walk against the type never reaches.
-//
-//nolint:ireturn // ast.Walk needs a Visitor back.
-func (f *unknownKeyFinder) Visit(node ast.Node) ast.Visitor {
-	if anchor, ok := node.(*ast.AnchorNode); ok {
-		name := anchor.Name.GetToken().Value
-		f.anchors[name] = append(f.anchors[name], anchor)
-	}
-
-	return f
-}
-
-// resolve returns the last anchor named like the alias that precedes it,
-// as YAML says an alias refers to the most recent anchor, or nil.
-func (f *unknownKeyFinder) resolve(alias *ast.AliasNode) *ast.AnchorNode {
-	tok := alias.Value.GetToken()
-
-	var target *ast.AnchorNode
-
-	for _, anchor := range f.anchors[tok.Value] {
-		if anchor.GetToken().Position.Offset >= tok.Position.Offset {
-			break
-		}
-
-		target = anchor
-	}
-
-	return target
 }
 
 // hasCustomUnmarshaler reports whether go-yaml hands values of typ to the
@@ -137,7 +105,7 @@ func (f *unknownKeyFinder) walk(node ast.Node, typ reflect.Type, path string) {
 
 		return
 	case *ast.AliasNode:
-		if anchor := f.resolve(n); anchor != nil {
+		if anchor := f.anchors.resolve(n); anchor != nil {
 			f.walk(anchor.Value, typ, path)
 		}
 
@@ -213,7 +181,7 @@ func (f *unknownKeyFinder) eachKey(node ast.Node, fn func(name string, tok *toke
 	case *ast.AnchorNode:
 		f.eachKey(n.Value, fn)
 	case *ast.AliasNode:
-		if anchor := f.resolve(n); anchor != nil {
+		if anchor := f.anchors.resolve(n); anchor != nil {
 			f.eachKey(anchor.Value, fn)
 		}
 	case *ast.SequenceNode:
@@ -251,7 +219,7 @@ func (f *unknownKeyFinder) keyName(key ast.Node) (string, bool) {
 	case *ast.AnchorNode:
 		return f.keyName(n.Value)
 	case *ast.AliasNode:
-		if anchor := f.resolve(n); anchor != nil {
+		if anchor := f.anchors.resolve(n); anchor != nil {
 			return f.keyName(anchor.Value)
 		}
 	case *ast.TagNode:

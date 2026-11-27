@@ -334,6 +334,19 @@ func (p *Parser) parseAndValidate(in io.Reader, fileURL *url.URL) (PublicCode, e
 		return nil, ValidationResults{newValidationError("", "multiple YAML documents in one file are not supported")}
 	}
 
+	// Decoding copies the value at each alias, so check how much the
+	// aliases add before decoding anything.
+	if alias := findAliasOverflow(file.Docs[0].Body); alias != nil {
+		tok := alias.GetToken()
+
+		return nil, ValidationResults{ValidationError{
+			Key:         findKeyAtLine(file.Docs[0].Body, tok.Position.Line, ""),
+			Description: fmt.Sprintf("YAML aliases expand to more than %d nodes", maxAliasNodes),
+			Line:        tok.Position.Line,
+			Column:      tok.Position.Column,
+		}}
+	}
+
 	// Extract publiccodeYmlVersion from the AST.
 	versionPath, err := yaml.PathString("$.publiccodeYmlVersion")
 	if err != nil {
